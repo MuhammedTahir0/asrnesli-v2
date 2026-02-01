@@ -57,7 +57,7 @@ const Categories = () => {
                          </div>
                          <input
                               type="text"
-                              placeholder="Kütüphanede ara..."
+                              placeholder="Kütüphanede ara..." aria-label="Kütüphanede ara"
                               className="block w-full p-5 pl-14 text-sm bg-white/70 dark:bg-white/5 border border-white dark:border-white/10 rounded-[2rem] placeholder-primary/40 focus:ring-4 focus:ring-accent-gold/10 focus:outline-none backdrop-blur-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] transition-all duration-500"
                          />
                     </div>
@@ -84,7 +84,7 @@ const Categories = () => {
                                         }}
                                         onClick={() => {
                                              const n = cat.name.toLowerCase().replace(/['’]/g, '');
-                                             console.log('Tıklanan Kategori (Normalize):', n); // Test için log
+
 
                                              if (n.includes('kuran')) navigate('/categories/quran');
                                              else if (n.includes('hadis')) navigate('/categories/hadith');
@@ -92,7 +92,7 @@ const Categories = () => {
                                              else if (n.includes('esma')) navigate('/categories/esma');
                                              else if (n.includes('dua') || n.includes('zikir')) navigate('/categories/prayers');
                                              else if (n.includes('hac') || n.includes('umre')) navigate('/categories/hajj');
-                                             else console.warn('Eşleşen rota bulunamadı:', n);
+
                                         }}
                                         className="group relative w-full h-32 overflow-hidden rounded-[2.5rem] bg-white dark:bg-[#1f291e] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 dark:border-white/5 cursor-pointer flex items-center px-8 transition-all hover:shadow-2xl hover:border-accent-gold/20 hover:-translate-y-1 text-left"
                                    >

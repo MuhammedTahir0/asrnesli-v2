@@ -34,15 +34,22 @@ const ShareStudio = () => {
           }
      }
 
+     const generateCanvas = async () => {
+          if (!cardRef.current) return null
+          return await html2canvas(cardRef.current, {
+               scale: 3, // High quality
+               useCORS: true,
+               backgroundColor: null,
+          })
+     }
+
      const handleDownload = async () => {
-          if (!cardRef.current || isProcessing) return
+          if (isProcessing) return
           setIsProcessing(true)
           try {
-               const canvas = await html2canvas(cardRef.current, {
-                    scale: 3, // High quality
-                    useCORS: true,
-                    backgroundColor: null,
-               })
+               const canvas = await generateCanvas()
+               if (!canvas) return
+
                const image = canvas.toDataURL('image/png', 1.0)
                const link = document.createElement('a')
                link.download = `islami-gunluk-${new Date().getTime()}.png`
@@ -57,14 +64,12 @@ const ShareStudio = () => {
      }
 
      const handleShare = async () => {
-          if (!cardRef.current || isProcessing) return
+          if (isProcessing) return
           setIsProcessing(true)
           try {
-               const canvas = await html2canvas(cardRef.current, {
-                    scale: 3,
-                    useCORS: true,
-                    backgroundColor: null,
-               })
+               const canvas = await generateCanvas()
+               if (!canvas) return
+
                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
                const file = new File([blob], 'islami-gunluk.png', { type: 'image/png' })
 

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
+import PrayerHero from './home/PrayerHero'
 
 const Home = () => {
      const navigate = useNavigate()
@@ -89,158 +90,206 @@ const Home = () => {
      }
 
      return (
-          <div className="relative z-10 flex-1 overflow-y-auto no-scrollbar pb-24 px-4 sm:px-6">
+          <div className="relative z-10 flex-1 overflow-y-auto no-scrollbar pb-28 px-5 sm:px-6 space-y-8">
                {/* Selamlama Bölümü */}
-               <div className="flex flex-col items-center justify-center pt-8 pb-10 gap-4 text-center">
-                    <div className="w-full max-w-[280px] h-16 relative mb-2">
-                         <h1 className="text-4xl text-accent-green dark:text-primary leading-tight calligraphy select-none">
+               <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex flex-col items-center justify-center pt-8 pb-4 gap-3 text-center"
+               >
+                    <div className="w-full max-w-[280px] relative mb-1">
+                         <h1 className="text-5xl text-accent-green dark:text-primary leading-tight calligraphy select-none drop-shadow-sm">
                               ﷽
                          </h1>
                     </div>
                     <div className="space-y-1">
-                         <h2 className="text-2xl font-bold text-text-primary dark:text-white tracking-tight">Hoş Geldiniz</h2>
-                         <p className="text-text-secondary dark:text-gray-400 text-sm italic">Gününüz bereketle dolsun.</p>
+                         <h2 className="text-xl font-bold text-text-primary dark:text-white tracking-tight">Hoş Geldiniz</h2>
+                         <p className="text-gray-400 text-xs font-medium tracking-wide uppercase">Gününüz Hayırlı Olsun</p>
                     </div>
-               </div>
+               </motion.div>
 
-               {/* Günün Ayeti Kartı */}
+               {/* Ezan Geri Sayım Hero */}
+               <PrayerHero />
+
+               {/* Günün Ayeti Kartı - Modern Görsel Odaklı */}
                {data.verse && (
                     <motion.article
                          initial={{ opacity: 0, y: 20 }}
                          animate={{ opacity: 1, y: 0 }}
-                         className="group mb-6 relative overflow-hidden rounded-2xl bg-surface-light dark:bg-[#222] shadow-[0_8px_24px_-6px_rgba(0,0,0,0.05)] border border-accent-gold/10 transition-transform duration-300 hover:scale-[1.01]"
+                         className="group relative rounded-[2rem] bg-white dark:bg-[#1e1e1e] shadow-xl shadow-gray-100/50 dark:shadow-none overflow-hidden"
                     >
-                         <div className="h-1.5 w-full bg-gradient-to-r from-accent-green/40 via-accent-green to-accent-green/40"></div>
-                         <div className="p-6">
-                              <div className="flex items-center justify-between mb-5">
-                                   <div className="flex items-center gap-2">
-                                        <span className="flex items-center justify-center size-8 rounded-full bg-accent-green/10 text-accent-green dark:text-primary">
-                                             <span className="material-symbols-outlined text-[18px]">auto_stories</span>
-                                        </span>
-                                        <span className="text-xs font-bold uppercase tracking-wider text-accent-gold">Günün Ayeti</span>
+                         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-400 via-emerald-600 to-emerald-400"></div>
+
+                         {/* Header */}
+                         <div className="px-6 pt-6 flex items-center justify-between">
+                              <div className="flex items-center gap-2.5">
+                                   <div className="size-8 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                                        <span className="material-symbols-outlined text-[18px]">menu_book</span>
                                    </div>
-                                   <button className="text-text-secondary hover:text-accent-green transition-colors">
-                                        <span className="material-symbols-outlined text-[20px]">bookmark_border</span>
-                                   </button>
+                                   <span className="text-xs font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-400">Günün Ayeti</span>
                               </div>
-                              <div className="flex flex-col gap-4">
-                                   <div className="w-full h-48 rounded-xl overflow-hidden relative">
-                                        <div className="absolute inset-0 bg-accent-green/20 z-10"></div>
-                                        <img
-                                             alt="Huzurlu doğa manzarası"
-                                             className="w-full h-full object-cover grayscale-[20%] opacity-90 transition-transform duration-700 group-hover:scale-105"
-                                             src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=80&w=1000"
-                                        />
-                                        <div className="absolute bottom-0 left-0 right-0 p-4 z-20 bg-gradient-to-t from-black/70 to-transparent">
-                                             <p className="text-white text-right text-2xl font-serif leading-loose drop-shadow-md calligraphy">
-                                                  {data.verse.content_ar}
-                                             </p>
-                                        </div>
-                                   </div>
-                                   <div className="space-y-3">
-                                        <p className="text-accent-green dark:text-primary text-sm font-semibold">
-                                             {data.verse.surah_name} Suresi, {data.verse.surah_number}:{data.verse.verse_number}
-                                        </p>
-                                        <p className="text-text-primary dark:text-gray-200 text-lg leading-relaxed font-medium">
-                                             "{data.verse.content_tr}"
+                              <button className="size-8 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 flex items-center justify-center text-gray-400 transition-colors">
+                                   <span className="material-symbols-outlined text-[20px]">bookmark_add</span>
+                              </button>
+                         </div>
+
+                         {/* Content */}
+                         <div className="p-6 pt-4 space-y-6">
+                              <div className="relative rounded-2xl overflow-hidden aspect-[16/9] group-hover:shadow-lg transition-all duration-500">
+                                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10"></div>
+                                   <img
+                                        alt="Ayet Görseli"
+                                        className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                                        src="https://images.unsplash.com/photo-1542856391-010fb87dcfed?q=80&w=1000&auto=format&fit=crop"
+                                   />
+                                   <div className="absolute bottom-4 right-4 z-20 max-w-[90%] text-right">
+                                        <p className="text-white text-xl md:text-2xl leading-relaxed calligraphy drop-shadow-md" dir="rtl">
+                                             {data.verse.content_ar}
                                         </p>
                                    </div>
+                              </div>
+
+                              <div className="space-y-3">
+                                   <h3 className="text-emerald-700 dark:text-emerald-400 font-bold text-sm flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        {data.verse.surah_name} Suresi, {data.verse.verse_number}. Ayet
+                                   </h3>
+                                   <p className="text-[#141514] dark:text-gray-100 text-lg font-medium leading-[1.7] font-serif">
+                                        "{data.verse.content_tr}"
+                                   </p>
                               </div>
                          </div>
-                         <div className="border-t border-gray-100 dark:border-gray-800 px-6 py-3 flex justify-between items-center bg-gray-50/50 dark:bg-white/5">
-                              <button className="text-text-secondary hover:text-accent-green text-xs font-medium uppercase tracking-wide flex items-center gap-1">
-                                   Tefsir Oku
-                                   <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+
+                         {/* Actions */}
+                         <div className="px-6 pb-6 pt-2 flex items-center justify-between">
+                              <button className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:opacity-80 transition-opacity uppercase tracking-wider">
+                                   Tefsirini Oku
+                                   <span className="material-symbols-outlined text-[16px]">arrow_right_alt</span>
                               </button>
-                              <Link to="/share" className="flex items-center justify-center size-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-text-secondary transition-colors">
+                              <Link
+                                   to="/share"
+                                   state={{
+                                        text: `"${data.verse.content_tr}"`,
+                                        source: `${data.verse.surah_name} Suresi, ${data.verse.verse_number}. Ayet`
+                                   }}
+                                   className="size-8 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 flex items-center justify-center text-emerald-600 dark:text-emerald-400 transition-colors"
+                              >
                                    <span className="material-symbols-outlined text-[20px]">share</span>
                               </Link>
                          </div>
                     </motion.article>
                )}
 
-               {/* Günün Hadisi Kartı */}
+               {/* Günün Hadisi Kartı - Klasik/Minimalist */}
                {data.hadith && (
                     <motion.article
                          initial={{ opacity: 0, y: 20 }}
                          animate={{ opacity: 1, y: 0 }}
                          transition={{ delay: 0.1 }}
-                         className="mb-6 rounded-2xl bg-surface-light dark:bg-[#222] shadow-[0_8px_24px_-6px_rgba(0,0,0,0.05)] border border-accent-gold/10 overflow-hidden"
+                         className="relative rounded-[2rem] bg-[#FDFBF7] dark:bg-[#252525] border border-[#e3e1dd] dark:border-white/5 p-8 shadow-sm"
                     >
-                         <div className="p-6 flex flex-col gap-4">
-                              <div className="flex items-center gap-2 mb-1">
-                                   <span className="flex items-center justify-center size-8 rounded-full bg-accent-gold/10 text-accent-gold">
-                                        <span className="material-symbols-outlined text-[18px]">format_quote</span>
-                                   </span>
-                                   <span className="text-xs font-bold uppercase tracking-wider text-accent-gold">Günün Hadisi</span>
+                         <div className="absolute top-6 left-6 opacity-5">
+                              <span className="material-symbols-outlined text-8xl text-[#C5A059]">format_quote</span>
+                         </div>
+
+                         <div className="relative z-10 space-y-6">
+                              <div className="flex items-center justify-center">
+                                   <span className="px-4 py-1.5 rounded-full border border-[#C5A059]/20 bg-[#C5A059]/5 text-[#C5A059] text-[10px] font-bold uppercase tracking-[0.2em]">Hadis-i Şerif</span>
                               </div>
-                              <div className="relative pl-4 border-l-2 border-accent-gold/30">
-                                   <p className="text-xl text-text-primary dark:text-white font-serif italic leading-relaxed">
+
+                              <div className="text-center space-y-6">
+                                   <p className="text-xl md:text-2xl text-[#141514] dark:text-white font-serif leading-[1.8] italic">
                                         "{data.hadith.content}"
                                    </p>
+                                   <div className="flex items-center justify-center gap-3">
+                                        <div className="h-px w-12 bg-[#C5A059]/30"></div>
+                                        <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">{data.hadith.source}</p>
+                                        <div className="h-px w-12 bg-[#C5A059]/30"></div>
+                                   </div>
                               </div>
-                              <div className="flex items-center justify-between mt-2">
-                                   <p className="text-xs font-bold text-accent-green dark:text-primary uppercase tracking-wide">
-                                        Kaynak: {data.hadith.source}
-                                   </p>
-                                   <Link to="/share" className="text-text-secondary hover:text-accent-gold transition-colors p-2 rounded-full hover:bg-background-light dark:hover:bg-white/5">
-                                        <span className="material-symbols-outlined text-[20px]">ios_share</span>
+
+                              <div className="flex justify-center pt-2">
+                                   <Link
+                                        to="/share"
+                                        state={{
+                                             text: `"${data.hadith.content}"`,
+                                             source: data.hadith.source
+                                        }}
+                                        className="size-10 rounded-full border border-[#C5A059]/30 flex items-center justify-center text-[#C5A059] hover:bg-[#C5A059] hover:text-white transition-all"
+                                   >
+                                        <span className="material-symbols-outlined text-[20px]">share</span>
                                    </Link>
                               </div>
                          </div>
                     </motion.article>
                )}
 
-               {/* İlmihal Bölümü */}
-               {data.ilmihal && (
-                    <section className="mb-6">
-                         <div className="flex items-center justify-between mb-3 px-1">
-                              <h3 className="text-lg font-bold text-text-primary dark:text-white">Günlük İlmihal</h3>
-                              <Link to="/categories" className="text-xs text-accent-gold font-medium hover:underline">Tümünü Gör</Link>
+               {/* Esma-ül Hüsna Kartı - Premium/Gradient */}
+               {data.nameOfAllah && (
+                    <motion.article
+                         initial={{ opacity: 0, y: 20 }}
+                         animate={{ opacity: 1, y: 0 }}
+                         transition={{ delay: 0.2 }}
+                         className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#1B2B1A] to-[#2D5A27] shadow-xl shadow-green-900/20"
+                    >
+                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')] opacity-10"></div>
+                         <div className="relative z-10 p-8 flex flex-col items-center text-center gap-6">
+                              <div className="size-20 rounded-full border-2 border-[#C5A059]/30 flex items-center justify-center bg-white/5 backdrop-blur-md shadow-inner">
+                                   <span className="text-4xl text-white calligraphy pt-2">{data.nameOfAllah.name_ar}</span>
+                              </div>
+
+                              <div className="space-y-2">
+                                   <h3 className="text-3xl font-bold text-[#C5A059] font-serif tracking-wide">{data.nameOfAllah.name_tr}</h3>
+                                   <p className="text-white/90 font-medium">{data.nameOfAllah.meaning}</p>
+                              </div>
+
+                              <p className="text-xs text-white/60 leading-relaxed max-w-[90%] border-t border-white/10 pt-4 mt-2">
+                                   {data.nameOfAllah.description}
+                              </p>
                          </div>
-                         <div className="rounded-2xl bg-surface-light dark:bg-[#222] shadow-[0_4px_16px_-4px_rgba(0,0,0,0.05)] border border-accent-gold/10 overflow-hidden">
-                              <details className="group open:bg-background-light dark:open:bg-[#1a1a1a] transition-colors duration-300">
-                                   <summary className="flex cursor-pointer items-center justify-between p-5 list-none select-none">
-                                        <div className="flex items-center gap-3">
-                                             <span className="flex items-center justify-center size-10 rounded-full bg-background-light dark:bg-white/5 text-accent-green dark:text-primary shrink-0">
-                                                  <span className="material-symbols-outlined">help_center</span>
-                                             </span>
-                                             <span className="text-text-primary dark:text-white font-medium text-base">{data.ilmihal.question}</span>
+                    </motion.article>
+               )}
+
+               {/* İlmihal Kartı - Bilgi Odaklı */}
+               {data.ilmihal && (
+                    <motion.section
+                         initial={{ opacity: 0, y: 20 }}
+                         animate={{ opacity: 1, y: 0 }}
+                         transition={{ delay: 0.3 }}
+                         className="bg-sky-50 dark:bg-sky-900/10 rounded-[2rem] p-1 border border-sky-100 dark:border-sky-800/30"
+                    >
+                         <div className="bg-white dark:bg-[#1a1c1a] rounded-[1.8rem] overflow-hidden">
+                              <details className="group">
+                                   <summary className="flex cursor-pointer items-start gap-4 p-6 list-none select-none hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                                        <div className="size-10 rounded-2xl bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 mt-1">
+                                             <span className="material-symbols-outlined">help</span>
                                         </div>
-                                        <span className="material-symbols-outlined text-text-secondary transition-transform duration-300 group-open:rotate-180">expand_more</span>
+                                        <div className="flex-1">
+                                             <div className="flex items-center justify-between mb-1">
+                                                  <span className="text-[10px] font-black uppercase tracking-widest text-sky-500">Günlük İlmihal</span>
+                                                  <span className="material-symbols-outlined text-gray-300 group-open:rotate-180 transition-transform">expand_more</span>
+                                             </div>
+                                             <h4 className="text-base font-bold text-[#141514] dark:text-white leading-snug">
+                                                  {data.ilmihal.question}
+                                             </h4>
+                                        </div>
                                    </summary>
-                                   <div className="px-5 pb-5 pt-0 ml-[3.25rem]">
-                                        <p className="text-text-secondary dark:text-gray-300 text-sm leading-relaxed border-l border-accent-gold/20 pl-4 py-1">
+                                   <div className="px-6 pb-6 pt-0 ml-[3.5rem]">
+                                        <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
                                              {data.ilmihal.answer}
                                         </p>
-                                        <Link to="/categories" className="inline-block mt-3 text-xs font-bold text-accent-green dark:text-primary uppercase tracking-wide hover:underline">Tamamını Oku</Link>
+                                        <Link to="/categories" className="inline-flex items-center gap-1 mt-4 text-xs font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wider hover:opacity-80">
+                                             Detaylı Bilgi
+                                             <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                                        </Link>
                                    </div>
                               </details>
                          </div>
-                    </section>
+                    </motion.section>
                )}
 
-               {/* Esma-ül Hüsna Kartı */}
-               {data.nameOfAllah && (
-                    <article className="mb-6 relative rounded-2xl bg-accent-green dark:bg-[#1f3a1d] text-white shadow-lg overflow-hidden">
-                         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')]"></div>
-                         <div className="relative z-10 p-6 flex flex-row items-center justify-between gap-6">
-                              <div className="flex-1">
-                                   <span className="inline-block px-2 py-1 rounded bg-white/20 text-[10px] font-bold uppercase tracking-widest mb-2 backdrop-blur-sm text-white">Allah'ın Güzel İsimleri</span>
-                                   <h3 className="text-3xl font-bold mb-1 font-serif text-accent-gold">{data.nameOfAllah.name_tr}</h3>
-                                   <p className="text-white/90 text-sm font-light">{data.nameOfAllah.meaning}</p>
-                                   <p className="mt-3 text-white/80 text-xs leading-relaxed line-clamp-2">
-                                        {data.nameOfAllah.description}
-                                   </p>
-                              </div>
-                              <div className="shrink-0 flex items-center justify-center size-24 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm">
-                                   <p className="text-4xl text-white calligraphy pt-2">{data.nameOfAllah.name_ar}</p>
-                              </div>
-                         </div>
-                    </article>
-               )}
-
-               <div className="h-4"></div>
+               {/* Bottom Spacer */}
+               <div className="h-6"></div>
           </div>
      )
 }

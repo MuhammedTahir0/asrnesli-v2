@@ -1,45 +1,115 @@
-import React, { useState, useRef } from 'react'
-import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import React, { useState, useRef, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Link, useLocation } from 'react-router-dom'
 import html2canvas from 'html2canvas'
 
 const ShareStudio = () => {
-     const [selectedStyle, setSelectedStyle] = useState('asil')
+     const location = useLocation()
      const [isProcessing, setIsProcessing] = useState(false)
      const cardRef = useRef(null)
+     const fileInputRef = useRef(null)
 
-     const styles = [
-          { id: 'asil', name: 'Asil Yeşil', color: 'bg-[#2D5A27]' },
-          { id: 'krem', name: 'Krem Altın', color: 'bg-[#F0EAD6]' },
-          { id: 'osmanli', name: 'Osmanlı', color: 'bg-[#3E2723]' },
-          { id: 'gece', name: 'Gece', color: 'bg-[#1a1a1a]' },
-          { id: 'sade', name: 'Sade', color: 'bg-white' },
-          { id: 'lale', name: 'Lale Devri', color: 'bg-[#8B0000]' },
-          { id: 'sultan', name: 'Sultan', color: 'bg-[#1a237e]' },
-          { id: 'safir', name: 'Safir', color: 'bg-[#004d40]' },
-          { id: 'toprak', name: 'Toprak', color: 'bg-[#4e342e]' },
-     ]
+     // State
+     const [content, setContent] = useState({
+          text: 'Kolaylaştırınız, zorlaştırmayınız. Müjdeleyiniz, nefret ettirmeyiniz.',
+          source: 'Hz. Muhammed (s.a.v)',
+          image: null
+     })
+     const [activeTab, setActiveTab] = useState('style') // style, size, edit
+     const [aspectRatio, setAspectRatio] = useState('story') // story, portrait, square
+     const [template, setTemplate] = useState('nature') // minimal, nature, classic, modern
 
-     const getCardStyle = () => {
-          switch (selectedStyle) {
-               case 'krem': return 'bg-[#F0EAD6] text-[#3E2723] border-[#cda151]/30'
-               case 'osmanli': return 'bg-[#3E2723] text-white border-[#cda151]/30'
-               case 'gece': return 'bg-[#1a1a1a] text-white border-white/20'
-               case 'sade': return 'bg-white text-gray-900 border-black/10'
-               case 'lale': return 'bg-[#8B0000] text-white border-white/20'
-               case 'sultan': return 'bg-[#1a237e] text-white border-white/20'
-               case 'safir': return 'bg-[#004d40] text-white border-white/20'
-               case 'toprak': return 'bg-[#4e342e] text-white border-white/20'
-               default: return 'bg-botanical text-white border-primary/60'
+     // Load content from navigation state if available
+     useEffect(() => {
+          if (location.state) {
+               setContent(prev => ({
+                    ...prev,
+                    text: location.state.text || prev.text,
+                    source: location.state.source || prev.source
+               }))
+          }
+     }, [location.state])
+
+     // Template Configurations
+     const templates = {
+          minimal: {
+               id: 'minimal',
+               name: 'Nur',
+               icon: 'light_mode',
+               container: 'bg-[#FDFBF7] text-gray-800',
+               overlay: null,
+               text: 'font-serif text-3xl italic leading-relaxed text-[#2c3e50]',
+               source: 'text-xs font-bold tracking-[0.2em] text-[#C5A059] uppercase mt-6',
+               decoration: (
+                    <div className="absolute inset-4 border border-[#C5A059]/20 rounded-sm pointer-events-none" />
+               )
+          },
+          nature: {
+               id: 'nature',
+               name: 'Doğa',
+               icon: 'landscape',
+               container: 'bg-gray-900 text-white relative overflow-hidden',
+               overlay: 'absolute inset-0 bg-black/30 z-0',
+               text: 'relative z-10 font-medium text-2xl md:text-3xl leading-relaxed drop-shadow-md text-center px-4',
+               source: 'relative z-10 text-xs font-medium tracking-wide opacity-90 mt-4',
+               decoration: null
+          },
+          classic: {
+               id: 'classic',
+               name: 'Hat',
+               icon: 'history_edu',
+               container: 'bg-[#1F2937] text-[#E5E7EB]',
+               overlay: `absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')]`,
+               text: 'font-serif text-2xl leading-loose text-[#D1D5DB] px-8 border-l-2 border-[#C5A059] pl-6 italic',
+               source: 'text-xs text-[#C5A059] font-bold mt-6 self-start pl-8',
+               decoration: (
+                    <>
+                         <div className="absolute top-0 inset-x-0 h-1 bg-[#C5A059]/50" />
+                         <div className="absolute bottom-0 inset-x-0 h-1 bg-[#C5A059]/50" />
+                    </>
+               )
+          },
+          modern: {
+               id: 'modern',
+               name: 'Gece',
+               icon: 'dark_mode',
+               container: 'bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#000000] text-white',
+               overlay: null,
+               text: 'font-sans font-bold text-3xl md:text-4xl tracking-tight leading-tight bg-gradient-to-br from-white to-white/70 bg-clip-text text-transparent',
+               source: 'text-xs font-bold px-3 py-1 bg-white/10 rounded-full mt-6 backdrop-blur-md',
+               decoration: (
+                    <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-accent-green/20 blur-[100px] rounded-full" />
+               )
+          }
+     }
+
+     const aspectRatios = {
+          story: { w: 1080, h: 1920, label: 'Hikaye', aspect: 'aspect-[9/16]' },
+          portrait: { w: 1080, h: 1350, label: 'Gönderi', aspect: 'aspect-[4/5]' },
+          square: { w: 1080, h: 1080, label: 'Kare', aspect: 'aspect-square' }
+     }
+
+     const handleImageUpload = (e) => {
+          const file = e.target.files?.[0]
+          if (file) {
+               const reader = new FileReader()
+               reader.onloadend = () => {
+                    setContent(prev => ({ ...prev, image: reader.result }))
+                    setTemplate('nature') // Switch to nature template for image
+               }
+               reader.readAsDataURL(file)
           }
      }
 
      const generateCanvas = async () => {
           if (!cardRef.current) return null
+          // Temporarily remove transform/scale for clean capture if needed, 
+          // or rely on html2canvas scaling.
           return await html2canvas(cardRef.current, {
-               scale: 3, // High quality
+               scale: 2,
                useCORS: true,
                backgroundColor: null,
+               logging: false
           })
      }
 
@@ -49,15 +119,13 @@ const ShareStudio = () => {
           try {
                const canvas = await generateCanvas()
                if (!canvas) return
-
                const image = canvas.toDataURL('image/png', 1.0)
                const link = document.createElement('a')
-               link.download = `islami-gunluk-${new Date().getTime()}.png`
+               link.download = `asr-nesli-${Date.now()}.png`
                link.href = image
                link.click()
           } catch (err) {
-               console.error('İndirme hatası:', err)
-               alert('Görüntü oluşturulurken bir hata oluştu.')
+               console.error('Hata:', err)
           } finally {
                setIsProcessing(false)
           }
@@ -69,169 +137,189 @@ const ShareStudio = () => {
           try {
                const canvas = await generateCanvas()
                if (!canvas) return
-
                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
-               const file = new File([blob], 'islami-gunluk.png', { type: 'image/png' })
-
-               if (navigator.share && navigator.canShare({ files: [file] })) {
+               const file = new File([blob], 'share.png', { type: 'image/png' })
+               if (navigator.share) {
                     await navigator.share({
                          files: [file],
-                         title: 'İslami Günlük',
-                         text: 'Günün ayeti/hadisi sizinle.'
+                         title: 'Asr Nesli Paylaşım',
+                         text: content.text
                     })
                } else {
-                    // Fallback to direct link download if sharing is not supported
                     handleDownload()
                }
           } catch (err) {
-               console.error('Paylaşım hatası:', err)
+               console.error('Hata:', err)
           } finally {
                setIsProcessing(false)
           }
      }
 
      return (
-          <div className="flex-1 flex flex-col w-full bg-background-light dark:bg-background-dark font-display antialiased overflow-x-hidden text-gray-900 dark:text-white">
+          <div className="flex flex-col h-screen bg-background-light dark:bg-background-dark font-display overflow-hidden">
                {/* Header */}
-               <header className="sticky top-0 z-30 flex items-center justify-between p-4 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-black/5 dark:border-white/5">
-                    <Link to="/" className="text-accent-gold hover:text-accent-gold/80 transition-transform active:scale-95 p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5">
-                         <span className="material-symbols-outlined text-3xl">arrow_back</span>
+               <header className="shrink-0 flex items-center justify-between p-4 border-b border-black/5 dark:border-white/5 z-20 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md">
+                    <Link to="/" className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                         <span className="material-symbols-outlined text-2xl dark:text-white">close</span>
                     </Link>
-                    <h2 className="text-lg font-bold tracking-tight text-center">Paylaşım Stüdyosu</h2>
-                    <div className="w-10"></div>
+                    <h1 className="text-sm font-bold uppercase tracking-widest dark:text-white">Stüdyo</h1>
+                    <button
+                         onClick={handleDownload}
+                         className="text-accent-green dark:text-primary font-bold text-sm hover:opacity-80 disabled:opacity-50"
+                         disabled={isProcessing}
+                    >
+                         Kaydet
+                    </button>
                </header>
 
-               {/* Main Content */}
-               <div className="flex-1 flex flex-col w-full max-w-lg mx-auto pb-[380px]">
-                    {/* Preview Canvas Area */}
-                    <div className="relative w-full px-8 py-8 flex flex-col items-center">
-                         {/* Card Container for html2canvas */}
-                         <div ref={cardRef} className="w-full">
-                              <motion.div
-                                   layout
-                                   className={`group relative w-full aspect-[4/5] rounded-sm shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] border-[6px] border-double flex flex-col items-center text-center overflow-hidden transform transition-all duration-500 ${getCardStyle()}`}
-                              >
-                                   {/* Silk Sheen Gradient Overlay */}
-                                   <div className="absolute inset-0 bg-silk-sheen opacity-40 mix-blend-soft-light pointer-events-none"></div>
-
-                                   {/* Ornamental Corners */}
-                                   <div className="absolute top-3 left-3 w-12 h-12 border-t-2 border-l-2 border-accent-gold rounded-tl-xl opacity-80"></div>
-                                   <div className="absolute top-3 right-3 w-12 h-12 border-t-2 border-r-2 border-accent-gold rounded-tr-xl opacity-80"></div>
-                                   <div className="absolute bottom-3 left-3 w-12 h-12 border-b-2 border-l-2 border-accent-gold rounded-bl-xl opacity-80"></div>
-                                   <div className="absolute bottom-3 right-3 w-12 h-12 border-b-2 border-r-2 border-accent-gold rounded-br-xl opacity-80"></div>
-
-                                   {/* Card Content */}
-                                   <div className="relative z-10 flex-1 flex flex-col justify-center items-center px-8 py-10 gap-6">
-                                        <span className="material-symbols-outlined text-accent-gold text-4xl opacity-80">format_quote</span>
-                                        <p className="text-xl md:text-2xl leading-relaxed font-medium drop-shadow-sm px-4">
-                                             Kolaylaştırınız, zorlaştırmayınız.<br />
-                                             Müjdeleyiniz, nefret ettirmeyiniz.
-                                        </p>
-                                        {/* Divider */}
-                                        <div className="w-16 h-px bg-gradient-to-r from-transparent via-accent-gold to-transparent opacity-70 mt-2"></div>
+               {/* Canvas Area */}
+               <div className="flex-1 relative bg-gray-100 dark:bg-[#121212] flex items-center justify-center p-8 overflow-hidden">
+                    <div className="relative z-10 shadow-2xl shadow-black/20">
+                         <div
+                              ref={cardRef}
+                              className={`relative flex flex-col items-center justify-center p-8 transition-all duration-500 overflow-hidden ${aspectRatios[aspectRatio].aspect} w-full max-h-[60vh] md:max-h-[70vh] aspect-auto-important ${templates[template].container}`}
+                              style={{
+                                   width: 'auto', // Dynamic width based on height constraint
+                                   aspectRatio: aspectRatios[aspectRatio].aspect.replace('aspect-', '').replace('[', '').replace(']', '').replace('/', '/'),
+                                   backgroundImage: (template === 'nature' && content.image) ? `url(${content.image})` : undefined,
+                                   backgroundSize: 'cover',
+                                   backgroundPosition: 'center'
+                              }}
+                         >
+                              {/* Default Nature Image if none selected */}
+                              {template === 'nature' && !content.image && (
+                                   <div className="absolute inset-0 z-0">
+                                        <img src="https://images.unsplash.com/photo-1542856391-010fb87dcfed?q=80&w=1000&auto=format&fit=crop" alt="Nature" className="w-full h-full object-cover" />
                                    </div>
+                              )}
 
-                                   {/* Card Footer */}
-                                   <div className="relative z-10 w-full pb-6 flex flex-col items-center gap-1">
-                                        <span className="text-accent-gold text-[11px] uppercase tracking-[0.2em] font-bold">İslami Günlük</span>
-                                        <span className="opacity-60 text-[10px] italic font-light tracking-wide">Buhari, İlim, 11</span>
+                              {/* Overlays & Decorations */}
+                              {templates[template].overlay && <div className={templates[template].overlay}></div>}
+                              {templates[template].decoration}
+
+                              {/* Content */}
+                              <div className="relative z-20 w-full flex flex-col items-center text-center">
+                                   <p className={templates[template].text}>
+                                        {content.text}
+                                   </p>
+                                   <div className={templates[template].source}>
+                                        {content.source}
                                    </div>
-                              </motion.div>
-                         </div>
-                         {/* Reflection/Ground Shadow */}
-                         <div className="w-[80%] h-4 bg-black/40 blur-xl rounded-[100%] mt-[-10px]"></div>
-                    </div>
+                              </div>
 
-                    {/* Style Selector */}
-                    <div className="mt-2 px-4">
-                         <h3 className="text-xl font-bold px-2 mb-4 text-text-primary dark:text-white/90">Kart Stilini Seç</h3>
-                         <div className="flex overflow-x-auto gap-4 pb-6 px-2 scrollbar-hide snap-x no-scrollbar">
-                              {styles.map((style) => (
-                                   <button
-                                        key={style.id}
-                                        onClick={() => setSelectedStyle(style.id)}
-                                        className={`snap-center shrink-0 flex flex-col items-center gap-2 group focus:outline-none transition-all ${selectedStyle === style.id ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`}
-                                   >
-                                        <div className={`w-20 h-20 rounded-2xl border-2 p-1 transition-all ${selectedStyle === style.id ? 'border-accent-gold shadow-lg shadow-accent-gold/10 scale-105' : 'border-transparent'}`}>
-                                             <div className={`w-full h-full rounded-xl relative overflow-hidden flex items-center justify-center ${style.color}`}>
-                                                  <div className="absolute inset-0 bg-silk-sheen opacity-50"></div>
-                                                  {selectedStyle === style.id && <span className="material-symbols-outlined text-accent-gold text-xl drop-shadow-md">check</span>}
-                                             </div>
-                                        </div>
-                                        <span className={`text-xs tracking-wide ${selectedStyle === style.id ? 'text-accent-gold font-bold' : 'text-text-secondary font-medium'}`}>{style.name}</span>
-                                   </button>
-                              ))}
+                              {/* Footer Branding */}
+                              <div className="absolute bottom-6 flex flex-col items-center opacity-60 z-20">
+                                   <span className="text-[10px] uppercase tracking-[0.2em] font-bold">Asr Nesli</span>
+                              </div>
                          </div>
                     </div>
                </div>
 
-               {/* Flash Designer Optimized Action Module */}
-               <div className="fixed bottom-[84px] left-0 w-full z-40 px-6 pointer-events-none">
-                    <div className="max-w-md mx-auto pointer-events-auto">
-                         <motion.div
-                              initial={{ y: 20, opacity: 0 }}
-                              animate={{ y: 0, opacity: 1 }}
-                              transition={{ duration: 0.6, ease: "easeOut" }}
-                              className="relative mb-6 rounded-[2.5rem] bg-[#1a2b1a]/95 backdrop-blur-2xl border border-white/10 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.6)] overflow-hidden"
-                         >
-                              {/* Loading Overlay */}
-                              {isProcessing && (
-                                   <div className="absolute inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm">
-                                        <div className="flex flex-col items-center gap-3">
-                                             <div className="size-10 border-4 border-accent-gold/20 border-t-accent-gold rounded-full animate-spin"></div>
-                                             <span className="text-white text-xs font-bold uppercase tracking-widest">Hazırlanıyor...</span>
-                                        </div>
-                                   </div>
+               {/* Controls */}
+               <div className="shrink-0 bg-surface-light dark:bg-[#1a1c1a] border-t border-black/5 dark:border-white/5 pb-safe z-30">
+                    {/* Tab Selection */}
+                    <div className="flex border-b border-black/5 dark:border-white/5">
+                         {[
+                              { id: 'style', icon: 'palette', label: 'Stil' },
+                              { id: 'size', icon: 'aspect_ratio', label: 'Boyut' },
+                              { id: 'edit', icon: 'edit_note', label: 'Düzenle' },
+                         ].map(tab => (
+                              <button
+                                   key={tab.id}
+                                   onClick={() => setActiveTab(tab.id)}
+                                   className={`flex-1 py-3 flex flex-col items-center gap-1 transition-colors ${activeTab === tab.id ? 'text-accent-green dark:text-primary' : 'text-text-secondary'}`}
+                              >
+                                   <span className="material-symbols-outlined text-xl">{tab.icon}</span>
+                                   <span className="text-[10px] font-bold uppercase">{tab.label}</span>
+                              </button>
+                         ))}
+                    </div>
+
+                    {/* Tab Content */}
+                    <div className="h-48 p-4 overflow-y-auto">
+                         <AnimatePresence mode="wait">
+                              {activeTab === 'style' && (
+                                   <motion.div
+                                        initial={{ opacity: 0, x: 10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -10 }}
+                                        className="grid grid-cols-4 gap-3"
+                                   >
+                                        {Object.values(templates).map((t) => (
+                                             <button
+                                                  key={t.id}
+                                                  onClick={() => setTemplate(t.id)}
+                                                  className={`flex flex-col items-center gap-2 group ${template === t.id ? 'opacity-100' : 'opacity-60'}`}
+                                             >
+                                                  <div className={`w-full aspect-square rounded-xl border-2 flex items-center justify-center overflow-hidden transition-all ${template === t.id ? 'border-accent-green dark:border-primary' : 'border-transparent bg-gray-100 dark:bg-white/5'}`}>
+                                                       <span className="material-symbols-outlined text-2xl">{t.icon}</span>
+                                                  </div>
+                                                  <span className="text-xs font-medium dark:text-white">{t.name}</span>
+                                             </button>
+                                        ))}
+                                   </motion.div>
                               )}
 
-                              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-accent-gold/50 to-transparent"></div>
+                              {activeTab === 'size' && (
+                                   <motion.div
+                                        initial={{ opacity: 0, x: 10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -10 }}
+                                        className="flex gap-4 justify-center items-center h-full"
+                                   >
+                                        {Object.entries(aspectRatios).map(([key, config]) => (
+                                             <button
+                                                  key={key}
+                                                  onClick={() => setAspectRatio(key)}
+                                                  className={`flex flex-col items-center gap-2 group ${aspectRatio === key ? 'opacity-100' : 'opacity-50'}`}
+                                             >
+                                                  <div className={`border-2 rounded-lg transition-all ${aspectRatio === key ? 'border-accent-green dark:border-primary bg-accent-green/10' : 'border-gray-300 dark:border-white/20'}`}
+                                                       style={{ width: '40px', aspectRatio: config.w / config.h }}
+                                                  ></div>
+                                                  <span className="text-xs font-medium dark:text-white">{config.label}</span>
+                                             </button>
+                                        ))}
+                                   </motion.div>
+                              )}
 
-                              <div className="p-7 space-y-6">
-                                   <div className="flex gap-4">
-                                        <button
-                                             onClick={handleDownload}
-                                             disabled={isProcessing}
-                                             className="flex-[2.5] relative group overflow-hidden h-16 bg-accent-gold rounded-2xl flex items-center justify-center gap-3 transition-all duration-500 active:scale-[0.98] shadow-2xl shadow-accent-gold/20 disabled:opacity-50"
-                                        >
-                                             <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity"></div>
-                                             <div className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
-                                             <span className="material-symbols-outlined text-background-dark text-2xl font-bold">download</span>
-                                             <span className="text-background-dark font-black tracking-tighter text-lg uppercase">Görüntüyü Kaydet</span>
-                                        </button>
-
-                                        <button
-                                             onClick={handleShare}
-                                             disabled={isProcessing}
-                                             className="flex-1 size-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-white/90 hover:bg-white/10 active:scale-90 transition-all group disabled:opacity-50"
-                                        >
-                                             <span className="material-symbols-outlined text-2xl group-hover:rotate-12 transition-transform">share</span>
-                                        </button>
-                                   </div>
-
-                                   <div className="flex items-center justify-between border-t border-white/5 pt-5 px-1">
-                                        <div className="flex flex-col">
-                                             <span className="text-[10px] font-black text-accent-gold uppercase tracking-[0.3em]">Hızlı Aktarım</span>
-                                             <span className="text-white/40 text-[11px] font-medium">Sosyal Medya Formatları</span>
-                                        </div>
+                              {activeTab === 'edit' && (
+                                   <motion.div
+                                        initial={{ opacity: 0, x: 10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -10 }}
+                                        className="space-y-4"
+                                   >
+                                        <textarea
+                                             value={content.text}
+                                             onChange={(e) => setContent({ ...content, text: e.target.value })}
+                                             className="w-full h-20 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-accent-green dark:text-white resize-none"
+                                             placeholder="Metninizi buraya yazın..."
+                                        />
                                         <div className="flex gap-3">
-                                             {[
-                                                  { icon: 'camera_alt', color: 'bg-white/5', action: handleDownload },
-                                                  { icon: 'send', color: 'bg-white/5', action: handleShare },
-                                                  { icon: 'grid_view', color: 'bg-white/5', action: handleShare }
-                                             ].map((item, i) => (
-                                                  <button
-                                                       key={i}
-                                                       onClick={item.action}
-                                                       disabled={isProcessing}
-                                                       className={`size-11 rounded-full ${item.color} flex items-center justify-center text-white/70 hover:text-accent-gold hover:bg-white/10 transition-all border border-white/5 active:scale-90 disabled:opacity-50`}
-                                                  >
-                                                       <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-                                                  </button>
-                                             ))}
+                                             <input
+                                                  value={content.source}
+                                                  onChange={(e) => setContent({ ...content, source: e.target.value })}
+                                                  className="flex-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-3 h-10 text-sm focus:outline-none focus:border-accent-green dark:text-white"
+                                                  placeholder="Kaynak / Yazar"
+                                             />
+                                             <button
+                                                  onClick={() => fileInputRef.current?.click()}
+                                                  className="px-4 h-10 bg-accent-green dark:bg-primary text-white rounded-xl text-xs font-bold uppercase tracking-wide flex items-center gap-2"
+                                             >
+                                                  <span className="material-symbols-outlined text-lg">add_photo_alternate</span>
+                                                  Görsel
+                                             </button>
+                                             <input
+                                                  type="file"
+                                                  ref={fileInputRef}
+                                                  onChange={handleImageUpload}
+                                                  accept="image/*"
+                                                  className="hidden"
+                                             />
                                         </div>
-                                   </div>
-                              </div>
-                         </motion.div>
+                                   </motion.div>
+                              )}
+                         </AnimatePresence>
                     </div>
                </div>
           </div>

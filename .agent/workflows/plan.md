@@ -39,6 +39,7 @@ RULES:
 3. Create PLAN-{slug}.md with task breakdown
 4. DO NOT write any code files
 5. REPORT the exact file name created
+6. ALWAYS write the content of the plan file in TURKISH language.
 ```
 
 ---
@@ -87,3 +88,5 @@ Next steps:
 /plan mobile app for fitness tracking
 /plan SaaS dashboard with analytics
 ```
+
+ dil türkçe olsun

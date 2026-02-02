@@ -45,6 +45,7 @@ function App() {
                          <Route path="/categories/esma" element={<EsmaDetail />} />
                          <Route path="/categories/prayers" element={<PrayerDetail />} />
                          <Route path="/categories/hajj" element={<HajjDetail />} />
+                         <Route path="/categories/reader" element={<ContentReader />} />
                          <Route path="/profile" element={<Placeholder title="Profil" />} />
                     </Routes>
                </Layout>

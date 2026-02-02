@@ -59,32 +59,32 @@ const ContentReader = () => {
                          animate={{ opacity: 1, y: 0 }}
                          transition={{ duration: 0.8 }}
                     >
-                         <p className="text-[10px] font-black uppercase tracking-[0.4em] text-accent-gold mb-3">{subtitle}</p>
-                         <h1 className="text-4xl font-bold text-primary dark:text-white mb-2 leading-tight">{title}</h1>
+                         <p className="text-[10px] font-black uppercase tracking-[0.4em] text-accent-gold mb-3 opacity-90">{subtitle}</p>
+                         <h1 className="text-2xl md:text-4xl font-bold text-primary dark:text-white mb-2 leading-tight">{title}</h1>
                          <div className="flex items-center justify-center gap-3">
                               <div className="h-px w-8 bg-accent-gold/30"></div>
-                              <span className="text-xs text-text-secondary font-medium italic">{source}</span>
+                              <span className="text-[10px] sm:text-xs text-text-secondary font-medium italic">{source}</span>
                               <div className="h-px w-8 bg-accent-gold/30"></div>
                          </div>
                     </motion.div>
                </section>
 
                {/* Reading Content */}
-               <main className="px-8 space-y-12">
+               <main className="px-6 sm:px-8 space-y-8 sm:space-y-12">
                     {/* Arabic Section (Optional) */}
                     {arabic && (
                          <motion.div
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
                               transition={{ delay: 0.3 }}
-                              className="p-10 rounded-[3rem] bg-accent-green/5 dark:bg-white/5 border border-accent-gold/10 relative group"
+                              className="p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] bg-accent-green/5 dark:bg-white/5 border border-accent-gold/10 relative group"
                          >
                               <div className="absolute top-6 left-6 opacity-10">
-                                   <span className="material-symbols-outlined text-4xl text-accent-gold">script</span>
+                                   <span className="material-symbols-outlined text-3xl sm:text-4xl text-accent-gold">script</span>
                               </div>
                               <p
-                                   className="text-center text-accent-green dark:text-primary leading-[3] calligraphy select-all transition-all"
-                                   style={{ fontSize: fontSize * 1.8 + 'px' }}
+                                   className="text-center text-accent-green dark:text-primary leading-[2.5] sm:leading-[3] calligraphy select-all transition-all"
+                                   style={{ fontSize: Math.max(24, fontSize * 1.5) + 'px' }}
                               >
                                    {arabic}
                               </p>

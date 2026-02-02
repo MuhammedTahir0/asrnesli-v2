@@ -62,8 +62,8 @@ const Layout = ({ children }) => {
                                                   </button>
                                              </div>
                                              <div>
-                                                  <h2 className="text-xl font-bold font-serif">İslami Günlük</h2>
-                                                  <p className="text-white/60 text-xs font-sans tracking-wide">Hoş Geldiniz, Ahmet</p>
+                                                  <h2 className="text-xl font-bold font-serif">Asr Nesli</h2>
+                                                  <p className="text-white/60 text-xs font-sans tracking-wide">Hakkı ve Sabrı Tavsiye Edenler</p>
                                              </div>
                                         </div>
                                    </div>

@@ -10,8 +10,33 @@ const PrayerTimes = () => {
      const [loading, setLoading] = useState(true)
      const [nextPrayer, setNextPrayer] = useState(null)
      const [timeLeft, setTimeLeft] = useState({ h: 0, m: 0, s: 0 })
-     const [activeTheme, setActiveTheme] = useState('day')
      const [progress, setProgress] = useState(0)
+
+     // Başlangıç temasını hesapla (localStorage varsa)
+     const getInitialTheme = () => {
+          const cachedData = localStorage.getItem('prayer_data')
+          if (cachedData) {
+               try {
+                    const parsed = JSON.parse(cachedData)
+                    if (new Date(parsed.timestamp).getDate() === new Date().getDate()) {
+                         const next = calculateNextPrayer(parsed.data.timings)
+                         if (next) {
+                              if (next.key === 'Sunrise') return 'fajr'
+                              if (next.key === 'Dhuhr') return 'morning'
+                              if (next.key === 'Asr') return 'noon'
+                              if (next.key === 'Maghrib') return 'afternoon'
+                              if (next.key === 'Isha') return 'sunset'
+                              return 'night'
+                         }
+                    }
+               } catch (e) {
+                    console.error("Tema hesaplama hatası:", e)
+               }
+          }
+          return 'day' // Default
+     }
+
+     const [activeTheme, setActiveTheme] = useState(getInitialTheme)
 
      // Initial Load
      useEffect(() => {
@@ -25,6 +50,18 @@ const PrayerTimes = () => {
                          setData(parsed.data)
                          setLocationName(cachedLocation)
                          setLoading(false)
+
+                         // Tema güncelle (cache'den)
+                         const next = calculateNextPrayer(parsed.data.timings)
+                         if (next) {
+                              let newTheme = 'night'
+                              if (next.key === 'Sunrise') newTheme = 'fajr'
+                              else if (next.key === 'Dhuhr') newTheme = 'morning'
+                              else if (next.key === 'Asr') newTheme = 'noon'
+                              else if (next.key === 'Maghrib') newTheme = 'afternoon'
+                              else if (next.key === 'Isha') newTheme = 'sunset'
+                              setActiveTheme(newTheme)
+                         }
                     }
                }
 
@@ -88,18 +125,21 @@ const PrayerTimes = () => {
                     setProgress(Math.max(0, Math.min(100, 100 - (totalSeconds / maxSeconds) * 100)))
 
                     // Theme
-                    if (next.key === 'Sunrise') setActiveTheme('fajr')
-                    else if (next.key === 'Dhuhr') setActiveTheme('morning')
-                    else if (next.key === 'Asr') setActiveTheme('noon')
-                    else if (next.key === 'Maghrib') setActiveTheme('afternoon')
-                    else if (next.key === 'Isha') setActiveTheme('sunset')
-                    else setActiveTheme('night')
+                    let newTheme = activeTheme
+                    if (next.key === 'Sunrise') newTheme = 'fajr'
+                    else if (next.key === 'Dhuhr') newTheme = 'morning'
+                    else if (next.key === 'Asr') newTheme = 'noon'
+                    else if (next.key === 'Maghrib') newTheme = 'afternoon'
+                    else if (next.key === 'Isha') newTheme = 'sunset'
+                    else newTheme = 'night'
+
+                    if (newTheme !== activeTheme) setActiveTheme(newTheme)
                }
 
           }, 1000)
 
           return () => clearInterval(timer)
-     }, [data])
+     }, [data, activeTheme])
 
      const themes = {
           fajr: { bg: 'from-[#0f172a] to-[#1e3a5f]', accent: 'text-indigo-300', card: 'bg-indigo-950/40', ring: 'stroke-indigo-400' },
@@ -177,43 +217,43 @@ const PrayerTimes = () => {
                     </div>
 
                     {/* Circular Countdown */}
-                    <div className="flex flex-col items-center justify-center py-8 px-6">
-                         <div className="relative size-56">
+                    <div className="flex flex-col items-center justify-center py-4 px-6">
+                         <div className="relative size-48">
                               {/* Background Ring */}
                               <svg className="absolute inset-0 w-full h-full -rotate-90">
                                    <circle
-                                        cx="112" cy="112" r="100"
+                                        cx="96" cy="96" r="88"
                                         fill="none"
                                         stroke="rgba(255,255,255,0.1)"
-                                        strokeWidth="8"
+                                        strokeWidth="6"
                                    />
                                    <motion.circle
-                                        cx="112" cy="112" r="100"
+                                        cx="96" cy="96" r="88"
                                         fill="none"
                                         className={currentTheme.ring}
-                                        strokeWidth="8"
+                                        strokeWidth="6"
                                         strokeLinecap="round"
-                                        strokeDasharray={628}
-                                        strokeDashoffset={628 - (628 * progress) / 100}
-                                        initial={{ strokeDashoffset: 628 }}
-                                        animate={{ strokeDashoffset: 628 - (628 * progress) / 100 }}
+                                        strokeDasharray={552}
+                                        strokeDashoffset={552 - (552 * progress) / 100}
+                                        initial={{ strokeDashoffset: 552 }}
+                                        animate={{ strokeDashoffset: 552 - (552 * progress) / 100 }}
                                         transition={{ duration: 0.5 }}
                                    />
                               </svg>
 
                               {/* Inner Content */}
                               <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                                   <span className="text-xs font-bold uppercase tracking-[0.2em] opacity-70 mb-1">
+                                   <span className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-70 mb-1">
                                         {nextPrayer?.name || 'Hesaplanıyor'}
                                    </span>
-                                   <div className="flex items-baseline gap-1">
-                                        <span className="text-5xl font-black tabular-nums">{String(timeLeft.h).padStart(2, '0')}</span>
-                                        <span className="text-2xl font-bold opacity-50">:</span>
-                                        <span className="text-5xl font-black tabular-nums">{String(timeLeft.m).padStart(2, '0')}</span>
-                                        <span className="text-2xl font-bold opacity-50">:</span>
-                                        <span className="text-3xl font-bold tabular-nums opacity-70">{String(timeLeft.s).padStart(2, '0')}</span>
+                                   <div className="flex items-baseline gap-0.5">
+                                        <span className="text-4xl font-black tabular-nums">{String(timeLeft.h).padStart(2, '0')}</span>
+                                        <span className="text-xl font-bold opacity-50">:</span>
+                                        <span className="text-4xl font-black tabular-nums">{String(timeLeft.m).padStart(2, '0')}</span>
+                                        <span className="text-xl font-bold opacity-50">:</span>
+                                        <span className="text-2xl font-bold tabular-nums opacity-70">{String(timeLeft.s).padStart(2, '0')}</span>
                                    </div>
-                                   <span className="text-[10px] font-medium uppercase tracking-widest opacity-50 mt-2">Kalan Süre</span>
+                                   <span className="text-[9px] font-medium uppercase tracking-widest opacity-50 mt-1">Kalan Süre</span>
                               </div>
                          </div>
 
@@ -229,8 +269,8 @@ const PrayerTimes = () => {
 
                     {/* Prayer List */}
                     <div className="px-4 flex-1">
-                         <div className={`rounded-[2rem] backdrop-blur-xl border border-white/10 p-3 shadow-2xl ${currentTheme.card}`}>
-                              <div className="flex flex-col gap-2">
+                         <div className={`rounded-[1.5rem] backdrop-blur-xl border border-white/10 p-2 shadow-2xl ${currentTheme.card}`}>
+                              <div className="flex flex-col gap-1.5">
                                    {data?.timings && prayerList.map((p) => {
                                         const isNext = nextPrayer?.key === p.key
                                         const isPassed = !isNext && prayerList.findIndex(x => x.key === nextPrayer?.key) > prayerList.findIndex(x => x.key === p.key)
@@ -240,42 +280,42 @@ const PrayerTimes = () => {
                                                   key={p.key}
                                                   initial={{ opacity: 0, y: 10 }}
                                                   animate={{ opacity: 1, y: 0 }}
-                                                  className={`relative flex items-center justify-between p-4 rounded-2xl transition-all duration-300 ${isNext
-                                                            ? 'bg-white text-gray-900 shadow-lg scale-[1.02]'
-                                                            : isPassed
-                                                                 ? 'opacity-50'
-                                                                 : 'hover:bg-white/5 text-white'
+                                                  className={`relative flex items-center justify-between p-2.5 rounded-xl transition-all duration-300 ${isNext
+                                                       ? 'bg-white text-gray-900 shadow-lg scale-[1.01]'
+                                                       : isPassed
+                                                            ? 'opacity-50'
+                                                            : 'hover:bg-white/5 text-white'
                                                        }`}
                                              >
-                                                  <div className="flex items-center gap-4">
-                                                       <div className={`size-12 rounded-2xl flex items-center justify-center transition-colors ${isNext ? 'bg-accent-green/10 text-accent-green' : 'bg-white/5 text-white/70'
+                                                  <div className="flex items-center gap-3">
+                                                       <div className={`size-8 rounded-xl flex items-center justify-center transition-colors ${isNext ? 'bg-accent-green/10 text-accent-green' : 'bg-white/5 text-white/70'
                                                             }`}>
-                                                            <span className="material-symbols-outlined text-2xl">{p.icon}</span>
+                                                            <span className="material-symbols-outlined text-lg">{p.icon}</span>
                                                        </div>
                                                        <div>
-                                                            <span className={`text-base font-bold tracking-wide block ${isNext ? 'text-gray-900' : ''}`}>
+                                                            <span className={`text-xs font-bold tracking-wide block ${isNext ? 'text-gray-900' : ''}`}>
                                                                  {p.label}
                                                             </span>
-                                                            <span className={`text-[10px] font-medium ${isNext ? 'text-gray-500' : 'text-white/50'}`}>
+                                                            <span className={`text-[8px] font-medium ${isNext ? 'text-gray-500' : 'text-white/50'}`}>
                                                                  {p.desc}
                                                             </span>
                                                        </div>
                                                   </div>
 
-                                                  <div className="flex items-center gap-3">
+                                                  <div className="flex items-center gap-2">
                                                        {isNext && (
                                                             <motion.span
                                                                  animate={{ scale: [1, 1.1, 1] }}
                                                                  transition={{ repeat: Infinity, duration: 2 }}
-                                                                 className="text-[9px] font-black uppercase tracking-widest bg-accent-gold text-white px-2 py-1 rounded-md"
+                                                                 className="text-[7px] font-black uppercase tracking-widest bg-accent-gold text-white px-1.5 py-0.5 rounded"
                                                             >
                                                                  Sıradaki
                                                             </motion.span>
                                                        )}
                                                        {isPassed && (
-                                                            <span className="material-symbols-outlined text-emerald-400 text-lg">check_circle</span>
+                                                            <span className="material-symbols-outlined text-emerald-400 text-sm">check_circle</span>
                                                        )}
-                                                       <span className={`text-xl font-bold font-display ${isNext ? 'text-gray-900' : 'opacity-90'}`}>
+                                                       <span className={`text-base font-bold font-display ${isNext ? 'text-gray-900' : 'opacity-90'}`}>
                                                             {data.timings[p.key]}
                                                        </span>
                                                   </div>

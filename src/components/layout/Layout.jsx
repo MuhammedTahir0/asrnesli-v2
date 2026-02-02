@@ -1,10 +1,51 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 
+const TURKISH_MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
+const HIJRI_MONTHS = ['Muharrem', 'Safer', 'Rebiülevvel', 'Rebiülahir', 'Cemaziyelevvel', 'Cemaziyelahir', 'Recep', 'Şaban', 'Ramazan', 'Şevval', 'Zilkade', 'Zilhicce']
+
 const Layout = ({ children }) => {
      const location = useLocation()
+     const props = { ...children.props }
      const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+     // hijri başlangıçta null (yükleniyor), hata/yoksa boş string
+     const [dateInfo, setDateInfo] = useState({ gregorian: '', hijri: null })
+
+     useEffect(() => {
+          const fetchHijriDate = async () => {
+               const today = new Date()
+               const day = today.getDate()
+               const month = today.getMonth() + 1
+               const year = today.getFullYear()
+
+               // Miladi tarih formatla
+               const gregorianDate = `${day} ${TURKISH_MONTHS[today.getMonth()]} ${year}`
+
+               // Başlangıçta sadece miladi tarihi set et, hijri null kalsın
+               setDateInfo(prev => ({ ...prev, gregorian: gregorianDate }))
+
+               try {
+                    // Endpoint düzeltildi: gpiToHijri -> gToH
+                    const response = await fetch(`https://api.aladhan.com/v1/gToH/${day}-${month}-${year}`)
+                    const data = await response.json()
+                    if (data.code === 200) {
+                         const h = data.data.hijri
+                         const hijriMonthIndex = parseInt(h.month.number) - 1
+                         const hijriDate = `${h.day} ${HIJRI_MONTHS[hijriMonthIndex]} ${h.year}`
+                         setDateInfo({ gregorian: gregorianDate, hijri: hijriDate })
+                    } else {
+                         // API hatası - boş string ata (yükleniyor gösterme)
+                         setDateInfo({ gregorian: gregorianDate, hijri: '' })
+                    }
+               } catch (err) {
+                    console.error("Hicri tarih hatası:", err)
+                    // Network hatası - boş string ata
+                    setDateInfo({ gregorian: gregorianDate, hijri: '' })
+               }
+          }
+          fetchHijriDate()
+     }, [])
 
      const menuItems = [
           { title: 'Ana Sayfa', icon: 'home', path: '/' },
@@ -117,8 +158,10 @@ const Layout = ({ children }) => {
                               <span className="material-symbols-outlined text-[28px]">menu</span>
                          </button>
                          <div className="flex flex-col items-center">
-                              <p className="text-xs font-bold tracking-widest uppercase text-accent-gold mb-0.5">12 Recep 1445</p>
-                              <p className="text-text-secondary text-[10px] font-sans tracking-wide">31 Ocak 2026</p>
+                              <p className="text-xs font-bold tracking-widest uppercase text-accent-gold mb-0.5">
+                                   {dateInfo.hijri === null ? 'Yükleniyor...' : dateInfo.hijri}
+                              </p>
+                              <p className="text-text-secondary text-[10px] font-sans tracking-wide">{dateInfo.gregorian}</p>
                          </div>
                          <button className="text-accent-green dark:text-primary transition-opacity hover:opacity-70 relative active:scale-95">
                               <span className="material-symbols-outlined text-[28px]">notifications</span>

@@ -35,7 +35,13 @@ const ForgotPassword = () => {
           setLoading(false)
 
           if (resetError) {
-               setError('Şifre sıfırlama e-postası gönderilemedi.')
+               console.error('Reset password error:', resetError)
+               // Rate limit hatası varsa daha açıklayıcı mesaj ver
+               if (resetError.status === 429) {
+                    setError('Çok fazla istek gönderildi. Lütfen bir dakika bekleyip tekrar deneyin.')
+               } else {
+                    setError(resetError.message || 'Şifre sıfırlama e-postası gönderilemedi.')
+               }
                return
           }
 

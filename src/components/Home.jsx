@@ -19,52 +19,77 @@ const Home = () => {
           const fetchDailyContent = async () => {
                try {
                     setLoading(true)
-                    // Bugünün içeriğini al
-                    const { data: daily, error: dailyError } = await supabase
+                    setError(null)
+
+                    const today = new Date().toISOString().split('T')[0]
+                    console.log('📅 İçerik aranıyor:', today)
+
+                    // Bugünün içeriğini al (single() yerine limit(1) kullanarak 406'yı önle)
+                    const { data: dailyList, error: dailyError } = await supabase
                          .from('daily_content')
                          .select(`
-            *,
-            verse:verses(*),
-            hadith:hadiths(*),
-            ilmihal:ilmihals(*),
-            nameOfAllah:names_of_allah(*)
-          `)
-                         .eq('display_date', new Date().toISOString().split('T')[0])
-                         .single()
+                              *,
+                              verse:verses(*),
+                              hadith:hadiths(*),
+                              ilmihal:ilmihals(*),
+                              nameOfAllah:names_of_allah(*)
+                         `)
+                         .eq('display_date', today)
+                         .limit(1)
 
                     if (dailyError) {
-                         // Eğer bugün için içerik yoksa, en son ekleneni al
-                         const { data: latest, error: latestError } = await supabase
-                              .from('daily_content')
-                              .select(`
-              *,
-              verse:verses(*),
-              hadith:hadiths(*),
-              ilmihal:ilmihals(*),
-              nameOfAllah:names_of_allah(*)
-            `)
-                              .order('display_date', { ascending: false })
-                              .limit(1)
-                              .single()
+                         console.error('❌ Bugünün içeriği çekilirken hata:', dailyError)
+                         // 406 hatası genellikle single() başarısız olduğunda gelir, 
+                         // ama select().limit(1) ile bu hatayı almamalıyız.
+                    }
 
-                         if (latestError) throw latestError
-                         setData({
-                              verse: latest.verse,
-                              hadith: latest.hadith,
-                              ilmihal: latest.ilmihal,
-                              nameOfAllah: latest.nameOfAllah
-                         })
-                    } else {
+                    if (dailyList && dailyList.length > 0) {
+                         console.log('✅ Bugünün içeriği bulundu')
+                         const daily = dailyList[0]
                          setData({
                               verse: daily.verse,
                               hadith: daily.hadith,
                               ilmihal: daily.ilmihal,
                               nameOfAllah: daily.nameOfAllah
                          })
+                    } else {
+                         console.log('ℹ️ Bugün için içerik yok veya hata oluştu, en son ekleneni alıyoruz...')
+
+                         // En son eklenen içeriği al
+                         const { data: latestList, error: latestError } = await supabase
+                              .from('daily_content')
+                              .select(`
+                                   *,
+                                   verse:verses(*),
+                                   hadith:hadiths(*),
+                                   ilmihal:ilmihals(*),
+                                   nameOfAllah:names_of_allah(*)
+                              `)
+                              .order('display_date', { ascending: false })
+                              .limit(1)
+
+                         if (latestError) {
+                              console.error('❌ En son içerik çekme hatası:', latestError)
+                              throw latestError
+                         }
+
+                         if (latestList && latestList.length > 0) {
+                              const latest = latestList[0]
+                              console.log('✅ Yedek içerik yüklendi:', latest.display_date)
+                              setData({
+                                   verse: latest.verse,
+                                   hadith: latest.hadith,
+                                   ilmihal: latest.ilmihal,
+                                   nameOfAllah: latest.nameOfAllah
+                              })
+                         } else {
+                              console.warn('⚠️ Hiç içerik bulunamadı (daily_content tablosu boş olabilir)')
+                              setError('Henüz bir içerik eklenmemiş.')
+                         }
                     }
                } catch (err) {
-                    console.error('Veri çekme hatası:', err)
-                    setError('İçerik yüklenirken bir sorun oluştu.')
+                    console.error('❌ Veri çekme genel hata:', err)
+                    setError('İçerik yüklenirken bir sorun oluştu. Lütfen bağlantınızı kontrol edin.')
                } finally {
                     setLoading(false)
                }
@@ -76,7 +101,7 @@ const Home = () => {
      if (loading) {
           return (
                <div className="flex-1 flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent-green"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
                </div>
           )
      }
@@ -111,7 +136,7 @@ const Home = () => {
                {/* Ezan Geri Sayım Hero */}
                <PrayerHero />
 
-               {/* Günün Ayeti Kartı - Modern Görsel Odaklı */}
+               {/* Günün Ayeti Kartı */}
                {data.verse && (
                     <motion.article
                          initial={{ opacity: 0, y: 20 }}
@@ -128,9 +153,6 @@ const Home = () => {
                                    </div>
                                    <span className="text-xs font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-400">Günün Ayeti</span>
                               </div>
-                              <button className="size-8 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 flex items-center justify-center text-gray-400 transition-colors">
-                                   <span className="material-symbols-outlined text-[20px]">bookmark_add</span>
-                              </button>
                          </div>
 
                          {/* Content */}
@@ -172,7 +194,7 @@ const Home = () => {
                                         text: `"${data.verse.content_tr}"`,
                                         source: `${data.verse.surah_name} Suresi, ${data.verse.verse_number}. Ayet`
                                    }}
-                                   className="size-8 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 flex items-center justify-center text-emerald-600 dark:text-emerald-400 transition-colors"
+                                   className="size-10 rounded-full border border-[#C5A059]/30 flex items-center justify-center text-[#C5A059] hover:bg-[#C5A059] hover:text-white transition-all"
                               >
                                    <span className="material-symbols-outlined text-[20px]">share</span>
                               </Link>
@@ -180,7 +202,7 @@ const Home = () => {
                     </motion.article>
                )}
 
-               {/* Günün Hadisi Kartı - Klasik/Minimalist */}
+               {/* Günün Hadisi Kartı */}
                {data.hadith && (
                     <motion.article
                          initial={{ opacity: 0, y: 20 }}
@@ -224,7 +246,7 @@ const Home = () => {
                     </motion.article>
                )}
 
-               {/* Esma-ül Hüsna Kartı - Premium/Gradient */}
+               {/* Esma-ül Hüsna Kartı */}
                {data.nameOfAllah && (
                     <motion.article
                          initial={{ opacity: 0, y: 20 }}
@@ -250,7 +272,7 @@ const Home = () => {
                     </motion.article>
                )}
 
-               {/* İlmihal Kartı - Bilgi Odaklı */}
+               {/* İlmihal Kartı */}
                {data.ilmihal && (
                     <motion.section
                          initial={{ opacity: 0, y: 20 }}

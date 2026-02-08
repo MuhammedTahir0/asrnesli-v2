@@ -1,17 +1,13 @@
-// AsrNesli Auth Context
-// Uygulama genelinde kimlik doğrulama durumu yönetimi
-
+// AsrNesli Auth Context - Stabilized Version
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import { getProfile, upsertProfile } from '../services/authService'
+import { getProfile, upsertProfile, signOut as signOutService } from '../services/authService'
 
 const AuthContext = createContext({})
 
 export const useAuth = () => {
      const context = useContext(AuthContext)
-     if (!context) {
-          throw new Error('useAuth hook must be used within AuthProvider')
-     }
+     if (!context) throw new Error('useAuth must be used within AuthProvider')
      return context
 }
 
@@ -21,117 +17,109 @@ export const AuthProvider = ({ children }) => {
      const [session, setSession] = useState(null)
      const [loading, setLoading] = useState(true)
      const [initialized, setInitialized] = useState(false)
+     const [logoutLoading, setLogoutLoading] = useState(false)
 
-     // Profil bilgisini yükle
      const loadProfile = async (userId, currentUser = null) => {
-          if (!userId) {
-               setProfile(null)
-               return
-          }
-
-          const { data, error } = await getProfile(userId)
-
-          // Profil varsa state'i güncelle
-          if (!error && data) {
-               setProfile(data)
-          }
-          // Profil yoksa ve user (metadata) varsa, profili oluştur (Google Login)
-          else if (currentUser) {
-               console.log('Profil bulunamadı, Google bilgilerinden oluşturuluyor...')
-
-               const { full_name, avatar_url, email } = currentUser.user_metadata || {}
-
-               // Username oluştur (email'den)
-               const baseUsername = email ? email.split('@')[0] : 'user'
-               const randomSuffix = Math.floor(Math.random() * 1000)
-               const username = `${baseUsername}${randomSuffix}`
-
-               const newProfile = {
-                    full_name: full_name || '',
-                    avatar_url: avatar_url || '',
-                    username: username,
-                    email: currentUser.email
+          if (!userId) return setProfile(null)
+          try {
+               const { data, error } = await getProfile(userId)
+               if (!error && data) {
+                    setProfile(data)
+               } else if (currentUser) {
+                    const { full_name, avatar_url, email } = currentUser.user_metadata || {}
+                    const username = `${email?.split('@')[0]}${Math.floor(Math.random() * 1000)}`
+                    const { data: created } = await upsertProfile(userId, {
+                         full_name: full_name || '',
+                         avatar_url: avatar_url || '',
+                         username,
+                         email: currentUser.email
+                    })
+                    if (created) setProfile(created)
                }
-
-               const { data: createdProfile, error: createError } = await upsertProfile(userId, newProfile)
-
-               if (!createError && createdProfile) {
-                    setProfile(createdProfile)
-                    console.log('Profil başarıyla oluşturuldu:', createdProfile)
-               } else {
-                    console.error('Profil oluşturulamadı:', createError)
-               }
+          } catch (err) {
+               console.error('loadProfile error:', err)
           }
      }
 
-     // Oturum durumunu dinle
+     // KRİTİK DÜZELTME: Bloklamayan Logout
+     const logout = async () => {
+          console.log('🚪 Logout süreci başlatıldı...')
+          setLogoutLoading(true)
+
+          // 1. Önce local state'leri temizle (UI anında tepki vermeli)
+          setUser(null)
+          setProfile(null)
+          setSession(null)
+
+          // 2. Storage'ı manuel temizle (Supabase'in takılma ihtimaline karşı)
+          try {
+               localStorage.clear()
+               sessionStorage.clear()
+          } catch (e) {
+               console.warn('Storage temizleme hatası:', e)
+          }
+
+          // 3. Supabase signOut işlemini arka planda çalıştır (AWAIT ETMİYORUZ)
+          signOutService().catch(err => console.error('Background SignOut error:', err))
+
+          setLogoutLoading(false)
+          return true
+     }
+
      useEffect(() => {
-          // İlk oturum kontrolü
-          const initializeAuth = async () => {
+          let mounted = true
+
+          const init = async () => {
                try {
-                    const { data: { session: currentSession } } = await supabase.auth.getSession()
-
-                    setSession(currentSession)
-                    setUser(currentSession?.user ?? null)
-
-                    if (currentSession?.user) {
-                         // User objesini de gönderiyoruz ki profil yoksa oluşturabilsin
-                         await loadProfile(currentSession.user.id, currentSession.user)
+                    const { data: { session: s } } = await supabase.auth.getSession()
+                    if (!mounted) return
+                    if (s?.user) {
+                         setSession(s)
+                         setUser(s.user)
+                         await loadProfile(s.user.id, s.user)
                     }
-               } catch (error) {
-                    console.error('Auth initialization error:', error)
                } finally {
-                    setLoading(false)
-                    setInitialized(true)
+                    if (mounted) {
+                         setLoading(false)
+                         setInitialized(true)
+                    }
                }
           }
 
-          initializeAuth()
+          init()
 
-          // Auth değişikliklerini dinle
-          const { data: { subscription } } = supabase.auth.onAuthStateChange(
-               async (event, currentSession) => {
-                    setSession(currentSession)
-                    setUser(currentSession?.user ?? null)
+          const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
+               if (!mounted) return
+               console.log('🔔 Auth Event:', event)
 
-                    if (event === 'SIGNED_IN' && currentSession?.user) {
-                         // User objesini de gönderiyoruz
-                         await loadProfile(currentSession.user.id, currentSession.user)
-                    } else if (event === 'SIGNED_OUT') {
-                         setProfile(null)
-                    }
-
-                    setLoading(false)
+               if (s?.user) {
+                    setSession(s)
+                    setUser(s.user)
+                    if (event === 'SIGNED_IN') loadProfile(s.user.id, s.user)
+               } else if (event === 'SIGNED_OUT') {
+                    setUser(null)
+                    setProfile(null)
+                    setSession(null)
                }
-          )
+
+               setLoading(false)
+               setInitialized(true)
+          })
 
           return () => {
+               mounted = false
                subscription?.unsubscribe()
           }
      }, [])
 
-     // Profili yenile
-     const refreshProfile = async () => {
-          if (user?.id) {
-               await loadProfile(user.id)
-          }
-     }
-
      const value = {
-          user,
-          profile,
-          session,
-          loading,
-          initialized,
+          user, profile, session, loading, initialized,
           isAuthenticated: !!user,
-          refreshProfile
+          logoutLoading, logout,
+          refreshProfile: () => user?.id && loadProfile(user.id)
      }
 
-     return (
-          <AuthContext.Provider value={value}>
-               {children}
-          </AuthContext.Provider>
-     )
+     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export default AuthContext

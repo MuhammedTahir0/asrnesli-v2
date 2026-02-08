@@ -13,16 +13,43 @@ console.log('🔌 Supabase Client Başlatılıyor...', { url: supabaseUrl ? 'Mev
 let supabaseInstance;
 
 try {
-     supabaseInstance = createClient(
-          supabaseUrl || 'https://placeholder-url.supabase.co',
-          supabaseAnonKey || 'placeholder-key'
-     );
+     // Singleton pattern for HMR (Hot Module Replacement)
+     if (import.meta.env.DEV && window.__supabase) {
+          supabaseInstance = window.__supabase;
+          console.log('♻️ Mevcut Supabase instance kullanılıyor (HMR)');
+     } else {
+          supabaseInstance = createClient(
+               supabaseUrl || 'https://placeholder-url.supabase.co',
+               supabaseAnonKey || 'placeholder-key',
+               {
+                    auth: {
+                         persistSession: true,
+                         autoRefreshToken: true,
+                         detectSessionInUrl: true,
+                         // flowType ve lock kaldırıldı - varsayılan implicit flow kullan
+                    }
+               }
+          );
+
+          if (import.meta.env.DEV) {
+               window.__supabase = supabaseInstance;
+          }
+          console.log('✅ Supabase client başarıyla oluşturuldu');
+     }
 } catch (error) {
      console.error('❌ Supabase başlatma hatası:', error);
-     // Hata durumunda boş bir obje döndür veya güvenli bir dummy client oluşturmaya çalış
+     // Hata durumunda dummy client
      supabaseInstance = {
+          auth: {
+               getSession: async () => ({ data: { session: null }, error: null }),
+               onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => { } } } }),
+               signOut: async () => ({ error: null }),
+               signInWithOAuth: async () => ({ data: null, error: new Error('Supabase başlatılamadı') }),
+               signInWithPassword: async () => ({ data: null, error: new Error('Supabase başlatılamadı') }),
+               signUp: async () => ({ data: null, error: new Error('Supabase başlatılamadı') }),
+          },
           from: () => ({
-               select: () => ({ eq: () => ({ single: () => ({ error: 'Supabase başlatılamadı' }) }) })
+               select: () => ({ eq: () => ({ single: () => ({ data: null, error: 'Supabase başlatılamadı' }) }) })
           })
      };
 }

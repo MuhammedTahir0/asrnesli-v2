@@ -5,11 +5,11 @@ import React, { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
-import { updateProfile, uploadAvatar, signOut } from '../services/authService'
+import { updateProfile, uploadAvatar } from '../services/authService'
 
 const Profile = () => {
      const navigate = useNavigate()
-     const { user, profile, refreshProfile } = useAuth()
+     const { user, profile, refreshProfile, logout, logoutLoading } = useAuth()
      const fileInputRef = useRef(null)
 
      const [isEditing, setIsEditing] = useState(false)
@@ -72,8 +72,14 @@ const Profile = () => {
      }
 
      const handleLogout = async () => {
-          await signOut()
-          navigate('/login')
+          try {
+               await logout()
+               // Navigate zaten AuthGuard tarafından da tetiklenebilir ama manuel yapmak daha güvenli
+               navigate('/login', { replace: true })
+          } catch (err) {
+               console.error('Logout error in component:', err)
+               navigate('/login', { replace: true })
+          }
      }
 
      return (
@@ -152,8 +158,8 @@ const Profile = () => {
                               initial={{ opacity: 0, y: -10 }}
                               animate={{ opacity: 1, y: 0 }}
                               className={`p-3 rounded-xl text-sm flex items-center gap-2 ${message.type === 'error'
-                                        ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                                        : 'bg-green-500/10 text-green-400 border border-green-500/20'
+                                   ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                                   : 'bg-green-500/10 text-green-400 border border-green-500/20'
                                    }`}
                          >
                               <span className="material-symbols-outlined text-lg">
@@ -244,8 +250,8 @@ const Profile = () => {
                               <div>
                                    <label className="text-xs text-gray-500 uppercase tracking-wide">Kayıt Tarihi</label>
                                    <p className="text-white mt-1">
-                                        {profile?.created_at
-                                             ? new Date(profile.created_at).toLocaleDateString('tr-TR', {
+                                        {(profile?.created_at || user?.created_at)
+                                             ? new Date(profile?.created_at || user?.created_at).toLocaleDateString('tr-TR', {
                                                   day: 'numeric',
                                                   month: 'long',
                                                   year: 'numeric'
@@ -260,12 +266,17 @@ const Profile = () => {
                     {/* Çıkış Yap Butonu */}
                     <motion.button
                          onClick={handleLogout}
-                         whileHover={{ scale: 1.01 }}
-                         whileTap={{ scale: 0.99 }}
-                         className="w-full py-3.5 rounded-xl border border-red-500/30 text-red-400 font-bold text-sm uppercase tracking-wider hover:bg-red-500/10 transition-all duration-300 flex items-center justify-center gap-2"
+                         disabled={logoutLoading}
+                         whileHover={{ scale: logoutLoading ? 1 : 1.01 }}
+                         whileTap={{ scale: logoutLoading ? 1 : 0.99 }}
+                         className="w-full py-3.5 rounded-xl border border-red-500/30 text-red-400 font-bold text-sm uppercase tracking-wider hover:bg-red-500/10 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                         <span className="material-symbols-outlined text-lg">logout</span>
-                         <span>Çıkış Yap</span>
+                         {logoutLoading ? (
+                              <div className="size-5 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin" />
+                         ) : (
+                              <span className="material-symbols-outlined text-lg">logout</span>
+                         )}
+                         <span>{logoutLoading ? 'Çıkış yapılıyor...' : 'Çıkış Yap'}</span>
                     </motion.button>
                </div>
           </div>

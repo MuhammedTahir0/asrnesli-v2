@@ -28,8 +28,13 @@ const AuthGuard = ({ children, requireAuth = true }) => {
 
      // Auth gerekli değil (login/register sayfaları) ama kullanıcı zaten giriş yapmış
      if (!requireAuth && isAuthenticated) {
-          const from = location.state?.from?.pathname || '/'
-          return <Navigate to={from} replace />
+          // ÖNEMLİ: Eğer şifre sıfırlama aşamasındaysa kullanıcıyı ana sayfaya atma
+          const isResettingPassword = location.pathname === '/reset-password' || window.location.hash.includes('type=recovery')
+
+          if (!isResettingPassword) {
+               const from = location.state?.from?.pathname || '/'
+               return <Navigate to={from} replace />
+          }
      }
 
      return children

@@ -434,23 +434,13 @@ const ShareStudio = () => {
           }
      }
 
-     const handleAdReward = async () => {
+     const handleAdReward = () => {
           if (adRewardLoading) return
           if (!user) {
                toast.error('Token kazanmak için giriş yapmalısınız.')
                return
           }
-          setAdRewardLoading(true)
-          try {
-               const nextTokens = await grantAndSyncToken()
-               if (typeof nextTokens === 'number') {
-                    toast.success('+1 token eklendi.')
-               }
-          } catch (err) {
-               console.error('Token ödül hatası:', err)
-          } finally {
-               setAdRewardLoading(false)
-          }
+          navigate('/ad-reward')
      }
 
      // Get background image URL

@@ -25,6 +25,7 @@ import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import Profile from './pages/Profile'
 import Favorites from './pages/Favorites'
+import AdReward from './pages/AdReward'
 
 function App() {
      return (
@@ -88,6 +89,7 @@ function App() {
                                              <Route path="/categories/reader" element={<ContentReader />} />
                                              <Route path="/profile" element={<Profile />} />
                                              <Route path="/favorites" element={<Favorites />} />
+                                             <Route path="/ad-reward" element={<AdReward />} />
                                         </Routes>
                                    </Layout>
                               </AuthGuard>

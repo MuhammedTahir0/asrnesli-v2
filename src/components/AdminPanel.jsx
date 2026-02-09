@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { toast } from 'react-hot-toast'
-import { adminListUsersTokens, adminAdjustToken, adminListTokenLogs, ADMIN_EMAIL } from '../services/authService'
+import { adminListUsersTokens, adminAdjustToken, adminListTokenLogs, adminGetAdStats, ADMIN_EMAIL } from '../services/authService'
 import { useAuth } from '../contexts/AuthContext'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts'
 
 const AdminPanel = () => {
      const { user } = useAuth()
@@ -35,6 +36,14 @@ const AdminPanel = () => {
      const [showTokenModal, setShowTokenModal] = useState(false)
      const [tokenOperation, setTokenOperation] = useState('add') // 'add' or 'remove'
 
+     // Reklam istatistikleri state'leri
+     const [adStats, setAdStats] = useState([])
+     const [adStatsLoading, setAdStatsLoading] = useState(false)
+     const [adStatsDateFilter, setAdStatsDateFilter] = useState({
+          start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Last 7 days
+          end: new Date().toISOString().split('T')[0]
+     })
+
      const [formData, setFormData] = useState({
           type: 'verses',
           content_ar: '',
@@ -61,6 +70,7 @@ const AdminPanel = () => {
           { id: 'names_of_allah', title: 'Esma-ül Hüsna Yönetimi', icon: 'hotel_class', color: '#b08d4d' },
           { id: 'daily_content', title: 'Günlük Akış Takvimi', icon: 'today', color: '#2D5A27' },
           { id: 'users', title: 'Kullanıcı & Token Yönetimi', icon: 'group', color: '#9333ea' },
+          { id: 'ad_stats', title: 'Reklam Analizi & İstatistik', icon: 'monitoring', color: '#fbbf24' },
      ]
 
      useEffect(() => {
@@ -68,10 +78,12 @@ const AdminPanel = () => {
           if (activeTab === 'users') {
                fetchUsers()
                fetchTokenLogs()
+          } else if (activeTab === 'ad_stats') {
+               fetchAdStats()
           } else {
                fetchItems()
           }
-     }, [activeTab])
+     }, [activeTab, adStatsDateFilter])
 
      const fetchStats = async () => {
           try {
@@ -140,6 +152,24 @@ const AdminPanel = () => {
                setTokenLogs(data || [])
           } catch (err) {
                console.error('Token logs fetch error:', err)
+          }
+     }
+
+     // Reklam istatistiklerini çek
+     const fetchAdStats = async () => {
+          setAdStatsLoading(true)
+          try {
+               const { data, error } = await adminGetAdStats({
+                    startDate: adStatsDateFilter.start ? new Date(adStatsDateFilter.start) : null,
+                    endDate: adStatsDateFilter.end ? new Date(adStatsDateFilter.end) : null
+               })
+               if (error) throw error
+               setAdStats(data || [])
+          } catch (err) {
+               console.error('Ad stats fetch error:', err)
+               toast.error('Reklam istatistikleri yüklenemedi')
+          } finally {
+               setAdStatsLoading(false)
           }
      }
 
@@ -294,18 +324,42 @@ const AdminPanel = () => {
                          </div>
 
                          <div className="flex items-center gap-3 md:gap-6">
-                              <div className="hidden md:flex h-12 px-5 bg-[#fcfaf7] rounded-full border border-[#e3e1dd] items-center gap-3 w-96 shadow-inner transition-all focus-within:ring-2 focus-within:ring-[#C5A059]/20 focus-within:border-[#C5A059]">
-                                   <span className="material-symbols-outlined text-gray-400 text-xl">search</span>
-                                   <input
-                                        type="text"
-                                        value={activeTab === 'users' ? userSearch : undefined}
-                                        onChange={(e) => activeTab === 'users' ? setUserSearch(e.target.value) : null}
-                                        placeholder={activeTab === 'users' ? "Kullanıcı ara (isim, email)..." : "İçeriklerde anahtar kelime ara..."}
-                                        className="bg-transparent border-none text-[15px] w-full focus:ring-0 placeholder-gray-400 font-medium"
-                                   />
-                              </div>
+                              {activeTab === 'ad_stats' ? (
+                                   <div className="flex items-center gap-2 md:gap-4 bg-[#fcfaf7] px-4 py-2 rounded-xl border border-[#e3e1dd]">
+                                        <div className="flex flex-col">
+                                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Başlangıç</span>
+                                             <input
+                                                  type="date"
+                                                  value={adStatsDateFilter.start || ''}
+                                                  onChange={(e) => setAdStatsDateFilter(prev => ({ ...prev, start: e.target.value }))}
+                                                  className="bg-transparent border-none text-xs font-bold p-0 focus:ring-0"
+                                             />
+                                        </div>
+                                        <div className="w-px h-8 bg-[#e3e1dd]" />
+                                        <div className="flex flex-col">
+                                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Bitiş</span>
+                                             <input
+                                                  type="date"
+                                                  value={adStatsDateFilter.end || ''}
+                                                  onChange={(e) => setAdStatsDateFilter(prev => ({ ...prev, end: e.target.value }))}
+                                                  className="bg-transparent border-none text-xs font-bold p-0 focus:ring-0"
+                                             />
+                                        </div>
+                                   </div>
+                              ) : (
+                                   <div className="hidden md:flex h-12 px-5 bg-[#fcfaf7] rounded-full border border-[#e3e1dd] items-center gap-3 w-96 shadow-inner transition-all focus-within:ring-2 focus-within:ring-[#C5A059]/20 focus-within:border-[#C5A059]">
+                                        <span className="material-symbols-outlined text-gray-400 text-xl">search</span>
+                                        <input
+                                             type="text"
+                                             value={activeTab === 'users' ? userSearch : ''}
+                                             onChange={(e) => activeTab === 'users' ? setUserSearch(e.target.value) : null}
+                                             placeholder={activeTab === 'users' ? "Kullanıcı ara (isim, email)..." : "İçeriklerde anahtar kelime ara..."}
+                                             className="bg-transparent border-none text-[15px] w-full focus:ring-0 placeholder-gray-400 font-medium"
+                                        />
+                                   </div>
+                              )}
 
-                              {activeTab !== 'users' && (
+                              {activeTab !== 'users' && activeTab !== 'ad_stats' && (
                                    <button
                                         onClick={() => {
                                              setFormData({ ...formData, type: activeTab === 'daily_content' ? 'verses' : activeTab })
@@ -398,7 +452,10 @@ const AdminPanel = () => {
                                                        </tr>
                                                   </thead>
                                                   <tbody className="divide-y divide-[#e3e1dd]">
-                                                       {filteredUsers.map((user) => (
+                                                       {users.filter(u =>
+                                                            u.full_name?.toLowerCase().includes(userSearch.toLowerCase()) ||
+                                                            u.email?.toLowerCase().includes(userSearch.toLowerCase())
+                                                       ).map((user) => (
                                                             <tr key={user.user_id} className="group hover:bg-[#fcfaf7] transition-all duration-500 cursor-default">
                                                                  <td className="px-6 md:px-12 py-6 md:py-8">
                                                                       <div className="flex flex-col">
@@ -448,6 +505,107 @@ const AdminPanel = () => {
                                                        ))}
                                                   </tbody>
                                              </table>
+                                        </div>
+                                   ) : activeTab === 'ad_stats' ? (
+                                        <div className="space-y-12">
+                                             {/* Ad Stats Summary Cards */}
+                                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+                                                  <div className="bg-white p-8 rounded-3xl border border-[#e3e1dd] shadow-sm">
+                                                       <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Toplam Gösterim</p>
+                                                       <h4 className="text-4xl font-black text-[#141514]">{adStats.reduce((acc, curr) => acc + parseInt(curr.impressions), 0)}</h4>
+                                                       <p className="text-[10px] text-green-600 font-bold mt-2 flex items-center gap-1">
+                                                            <span className="material-symbols-outlined text-xs">trending_up</span> Canlı Veri
+                                                       </p>
+                                                  </div>
+                                                  <div className="bg-white p-8 rounded-3xl border border-[#e3e1dd] shadow-sm">
+                                                       <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Toplam Ödül (Reward)</p>
+                                                       <h4 className="text-4xl font-black text-[#C5A059]">{adStats.reduce((acc, curr) => acc + parseInt(curr.rewards), 0)}</h4>
+                                                       <p className="text-[10px] text-gray-400 font-bold mt-2">Dağıtılan Token Miktarı</p>
+                                                  </div>
+                                                  <div className="bg-white p-8 rounded-3xl border border-[#e3e1dd] shadow-sm">
+                                                       <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Dönüşüm Oranı (CVR)</p>
+                                                       <h4 className="text-4xl font-black text-emerald-600">
+                                                            {adStats.length > 0 ?
+                                                                 ((adStats.reduce((acc, curr) => acc + parseInt(curr.rewards), 0) /
+                                                                      adStats.reduce((acc, curr) => acc + Math.max(1, parseInt(curr.impressions)), 0)) * 100).toFixed(1) : 0}%
+                                                       </h4>
+                                                       <p className="text-[10px] text-gray-400 font-bold mt-2">Gösterim / Ödül Oranı</p>
+                                                  </div>
+                                             </div>
+
+                                             {/* Ad Stats Chart */}
+                                             <div className="bg-white p-8 md:p-12 rounded-[2.5rem] border border-[#e3e1dd] shadow-sm overflow-hidden">
+                                                  <div className="flex items-center justify-between mb-10">
+                                                       <h5 className="text-xl font-bold font-display">Günlük Performans Grafiği</h5>
+                                                       <div className="flex items-center gap-4">
+                                                            <div className="flex items-center gap-2">
+                                                                 <div className="size-3 rounded-full bg-[#fbbf24]" />
+                                                                 <span className="text-xs font-bold text-gray-400">Gösterim</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                 <div className="size-3 rounded-full bg-[#2D5A27]" />
+                                                                 <span className="text-xs font-bold text-gray-400">Ödül</span>
+                                                            </div>
+                                                       </div>
+                                                  </div>
+                                                  <div className="h-[400px] w-full">
+                                                       <ResponsiveContainer width="100%" height="100%">
+                                                            <LineChart data={[...adStats].reverse()}>
+                                                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                                                                 <XAxis
+                                                                      dataKey="stat_date"
+                                                                      axisLine={false}
+                                                                      tickLine={false}
+                                                                      tick={{ fontSize: 12, fontWeight: 600, fill: '#9ca3af' }}
+                                                                      dy={10}
+                                                                 />
+                                                                 <YAxis
+                                                                      axisLine={false}
+                                                                      tickLine={false}
+                                                                      tick={{ fontSize: 12, fontWeight: 600, fill: '#9ca3af' }}
+                                                                 />
+                                                                 <Tooltip
+                                                                      contentStyle={{
+                                                                           borderRadius: '16px',
+                                                                           border: 'none',
+                                                                           boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+                                                                           fontWeight: 'bold'
+                                                                      }}
+                                                                 />
+                                                                 <Line type="monotone" dataKey="impressions" stroke="#fbbf24" strokeWidth={4} dot={{ r: 6, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 8 }} name="Gösterim" />
+                                                                 <Line type="monotone" dataKey="rewards" stroke="#2D5A27" strokeWidth={4} dot={{ r: 6, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 8 }} name="Ödül" />
+                                                            </LineChart>
+                                                       </ResponsiveContainer>
+                                                  </div>
+                                             </div>
+
+                                             {/* Ad Stats Data Table */}
+                                             <div className="bg-white rounded-[2rem] border border-[#e3e1dd] shadow-sm overflow-hidden">
+                                                  <table className="w-full text-left">
+                                                       <thead>
+                                                            <tr className="bg-gray-50/50 text-[#141514]/40 text-[11px] font-bold uppercase tracking-widest border-b border-[#e3e1dd]">
+                                                                 <th className="px-12 py-8">Tarih</th>
+                                                                 <th className="px-12 py-8 text-center">Gösterim</th>
+                                                                 <th className="px-12 py-8 text-center">Ödül (Reward)</th>
+                                                                 <th className="px-12 py-8 text-center">Atlanan (Skip)</th>
+                                                                 <th className="px-12 py-8 text-right">CVR</th>
+                                                            </tr>
+                                                       </thead>
+                                                       <tbody className="divide-y divide-[#e3e1dd]">
+                                                            {adStats.map((row) => (
+                                                                 <tr key={row.stat_date} className="hover:bg-gray-50/50 transition-colors">
+                                                                      <td className="px-12 py-8 font-bold text-[#141514]">{new Date(row.stat_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</td>
+                                                                      <td className="px-12 py-8 text-center font-bold">{row.impressions}</td>
+                                                                      <td className="px-12 py-8 text-center font-bold text-[#2D5A27]">{row.rewards}</td>
+                                                                      <td className="px-12 py-8 text-center font-bold text-red-500">{row.skips}</td>
+                                                                      <td className="px-12 py-8 text-right font-black text-emerald-600">
+                                                                           {((parseInt(row.rewards) / Math.max(1, parseInt(row.impressions))) * 100).toFixed(1)}%
+                                                                      </td>
+                                                                 </tr>
+                                                            ))}
+                                                       </tbody>
+                                                  </table>
+                                             </div>
                                         </div>
                                    ) : items.length === 0 ? (
                                         <div className="p-20 md:p-40 text-center space-y-8">

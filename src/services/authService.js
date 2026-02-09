@@ -359,6 +359,40 @@ export const isAdminUser = (user) => {
      return user?.email === ADMIN_EMAIL
 }
 
+/**
+ * Reklam olaylarını takip eder (Impression, Reward, Skip)
+ */
+export const trackAdEvent = async (eventType) => {
+     try {
+          const { error } = await supabase.rpc('track_ad_event', {
+               p_event_type: eventType,
+               p_platform: 'web'
+          })
+          if (error) throw error
+          return { error: null }
+     } catch (error) {
+          console.error('trackAdEvent error:', error)
+          return { error }
+     }
+}
+
+/**
+ * Admin: Reklam istatistiklerini getirir
+ */
+export const adminGetAdStats = async ({ startDate = null, endDate = null } = {}) => {
+     try {
+          const { data, error } = await supabase.rpc('get_ad_statistics', {
+               p_start_date: typeof startDate === 'string' ? startDate : startDate?.toISOString() || null,
+               p_end_date: typeof endDate === 'string' ? endDate : endDate?.toISOString() || null
+          })
+          if (error) throw error
+          return { data, error: null }
+     } catch (error) {
+          console.error('adminGetAdStats error:', error)
+          return { data: null, error }
+     }
+}
+
 export default {
      signUpWithEmail,
      signInWithEmail,
@@ -378,6 +412,8 @@ export default {
      adminListUsersTokens,
      adminAdjustToken,
      adminListTokenLogs,
+     trackAdEvent,
+     adminGetAdStats,
      isAdminUser,
      ADMIN_EMAIL
 }

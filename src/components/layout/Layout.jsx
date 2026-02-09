@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useAuth } from '../../contexts/AuthContext'
+import { ADMIN_EMAIL } from '../../services/authService'
 
 const TURKISH_MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
 const HIJRI_MONTHS = ['Muharrem', 'Safer', 'Rebiülevvel', 'Rebiülahir', 'Cemaziyelevvel', 'Cemaziyelahir', 'Recep', 'Şaban', 'Ramazan', 'Şevval', 'Zilkade', 'Zilhicce']
 
 const Layout = ({ children }) => {
      const location = useLocation()
+     const { user, logout } = useAuth()
      const props = { ...children.props }
      const [isSidebarOpen, setIsSidebarOpen] = useState(false)
      // hijri başlangıçta null (yükleniyor), hata/yoksa boş string
@@ -57,6 +60,14 @@ const Layout = ({ children }) => {
           { title: 'Ayarlar', icon: 'settings', path: '/settings' },
           { title: 'Yönetim Paneli', icon: 'admin_panel_settings', path: '/admin', admin: true },
      ]
+
+     // Filter menu items based on admin status
+     const visibleMenuItems = menuItems.filter(item => {
+          if (item.admin) {
+               return user?.email === ADMIN_EMAIL
+          }
+          return true
+     })
 
      const isAdminPage = location.pathname === '/admin'
 
@@ -111,7 +122,7 @@ const Layout = ({ children }) => {
 
                                    {/* Sidebar Links */}
                                    <nav className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-1">
-                                        {menuItems.map((item) => (
+                                        {visibleMenuItems.map((item) => (
                                              <Link
                                                   key={item.path}
                                                   to={item.path}
@@ -133,15 +144,19 @@ const Layout = ({ children }) => {
                                                   )}
                                              </Link>
                                         ))}
+
+                                        <button
+                                             onClick={logout}
+                                             className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all group text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600"
+                                        >
+                                             <span className="material-symbols-outlined text-[24px] group-hover:scale-110 transition-transform">logout</span>
+                                             <span className="text-sm font-medium tracking-wide">Çıkış Yap</span>
+                                        </button>
                                    </nav>
 
                                    {/* Sidebar Footer */}
                                    <div className="p-6 border-t border-gray-100 dark:border-white/5">
-                                        <button className="w-full flex items-center gap-3 text-red-500 font-bold text-sm px-4 py-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
-                                             <span className="material-symbols-outlined">logout</span>
-                                             Çıkış Yap
-                                        </button>
-                                        <p className="mt-4 text-[10px] text-center text-text-secondary/50 font-sans tracking-widest uppercase">v1.2.0 Beta</p>
+                                        <p className="text-[10px] text-center text-text-secondary/50 font-sans tracking-widest uppercase">v1.2.0 Beta</p>
                                    </div>
                               </motion.aside>
                          </>

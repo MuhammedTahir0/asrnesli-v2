@@ -36,8 +36,8 @@ export const backgrounds = [
           id: 'islamic-1',
           name: 'Cami İçi',
           category: 'İslami',
-          url: 'https://images.unsplash.com/photo-1564769625392-651b89c75a5c?q=80&w=1080&auto=format&fit=crop',
-          thumbnail: 'https://images.unsplash.com/photo-1564769625392-651b89c75a5c?q=80&w=200&auto=format&fit=crop'
+          url: 'https://images.unsplash.com/photo-1585046271960-917409c95213?q=80&w=1080&auto=format&fit=crop',
+          thumbnail: 'https://images.unsplash.com/photo-1585046271960-917409c95213?q=80&w=200&auto=format&fit=crop'
      },
      {
           id: 'islamic-2',

@@ -56,7 +56,7 @@ export const getGoogleFontsUrl = (selectedFonts) => {
           .join('&family=')
 
      if (!fontParams) return null
-     return `https://fonts.googleapis.com/css2?family=${fontParams}&display=swap`
+     return `https://fonts.googleapis.com/css?family=${fontParams}&display=swap`
 }
 
 export default fonts

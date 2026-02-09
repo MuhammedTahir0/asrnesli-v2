@@ -1,15 +1,39 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
+import { toast } from 'react-hot-toast'
+import { adminListUsersTokens, adminAdjustToken, adminListTokenLogs, ADMIN_EMAIL } from '../services/authService'
+import { useAuth } from '../contexts/AuthContext'
 
 const AdminPanel = () => {
+     const { user } = useAuth()
+     const navigate = useNavigate()
+
+     useEffect(() => {
+          if (user && user.email !== ADMIN_EMAIL) {
+               toast.error('Bu sayfaya erişim yetkiniz yok')
+               navigate('/')
+          }
+     }, [user, navigate])
+
      const [activeTab, setActiveTab] = useState('verses')
      const [showModal, setShowModal] = useState(false)
      const [items, setItems] = useState([])
      const [loading, setLoading] = useState(true)
-     const [stats, setStats] = useState({ verses: 0, hadiths: 0, ilmihals: 0, names: 0 })
+     const [stats, setStats] = useState({ verses: 0, hadiths: 0, ilmihals: 0, names: 0, users: 0 })
      const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
+
+     // Token yönetimi state'leri
+     const [users, setUsers] = useState([])
+     const [tokenLogs, setTokenLogs] = useState([])
+     const [selectedUser, setSelectedUser] = useState(null)
+     const [tokenAmount, setTokenAmount] = useState(1)
+     const [tokenReason, setTokenReason] = useState('')
+     const [userSearch, setUserSearch] = useState('')
+     const [dateFilter, setDateFilter] = useState({ start: '', end: '' })
+     const [showTokenModal, setShowTokenModal] = useState(false)
+     const [tokenOperation, setTokenOperation] = useState('add') // 'add' or 'remove'
 
      const [formData, setFormData] = useState({
           type: 'verses',
@@ -36,11 +60,17 @@ const AdminPanel = () => {
           { id: 'ilmihals', title: 'İlmihal Rehberi Seçenekleri', icon: 'help_center', color: '#4a7c44' },
           { id: 'names_of_allah', title: 'Esma-ül Hüsna Yönetimi', icon: 'hotel_class', color: '#b08d4d' },
           { id: 'daily_content', title: 'Günlük Akış Takvimi', icon: 'today', color: '#2D5A27' },
+          { id: 'users', title: 'Kullanıcı & Token Yönetimi', icon: 'group', color: '#9333ea' },
      ]
 
      useEffect(() => {
           fetchStats()
-          fetchItems()
+          if (activeTab === 'users') {
+               fetchUsers()
+               fetchTokenLogs()
+          } else {
+               fetchItems()
+          }
      }, [activeTab])
 
      const fetchStats = async () => {
@@ -49,7 +79,8 @@ const AdminPanel = () => {
                const { count: hCount } = await supabase.from('hadiths').select('*', { count: 'exact', head: true })
                const { count: iCount } = await supabase.from('ilmihals').select('*', { count: 'exact', head: true })
                const { count: nCount } = await supabase.from('names_of_allah').select('*', { count: 'exact', head: true })
-               setStats({ verses: vCount || 0, hadiths: hCount || 0, ilmihals: iCount || 0, names: nCount || 0 })
+               const { count: uCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true })
+               setStats({ verses: vCount || 0, hadiths: hCount || 0, ilmihals: iCount || 0, names: nCount || 0, users: uCount || 0 })
           } catch (err) {
                console.error('Stats error:', err)
           }
@@ -80,6 +111,66 @@ const AdminPanel = () => {
                setLoading(false)
           }
      }
+
+     // Kullanıcı listesi çek
+     const fetchUsers = async () => {
+          setLoading(true)
+          try {
+               const { data, error } = await adminListUsersTokens()
+               if (error) throw error
+               setUsers(data || [])
+          } catch (err) {
+               console.error('Users fetch error:', err)
+               toast.error('Kullanıcı listesi yüklenemedi')
+          } finally {
+               setLoading(false)
+          }
+     }
+
+     // Token loglarını çek
+     const fetchTokenLogs = async () => {
+          try {
+               const filters = {}
+               if (selectedUser) filters.userId = selectedUser.user_id
+               if (dateFilter.start) filters.startDate = new Date(dateFilter.start)
+               if (dateFilter.end) filters.endDate = new Date(dateFilter.end)
+
+               const { data, error } = await adminListTokenLogs(filters)
+               if (error) throw error
+               setTokenLogs(data || [])
+          } catch (err) {
+               console.error('Token logs fetch error:', err)
+          }
+     }
+
+     // Token ekle/çıkar
+     const handleTokenAdjust = async () => {
+          if (!selectedUser || tokenAmount === 0) return
+
+          const amount = tokenOperation === 'add' ? Math.abs(tokenAmount) : -Math.abs(tokenAmount)
+
+          try {
+               const { data, error } = await adminAdjustToken(selectedUser.user_id, amount, tokenReason || null)
+               if (error) throw error
+
+               toast.success(`${selectedUser.full_name} için ${amount > 0 ? '+' : ''}${amount} token işlemi başarılı`)
+               setShowTokenModal(false)
+               setTokenAmount(1)
+               setTokenReason('')
+               fetchUsers()
+               fetchTokenLogs()
+          } catch (err) {
+               console.error('Token adjust error:', err)
+               toast.error('Token işlemi başarısız: ' + err.message)
+          }
+     }
+
+     // Filtrelenmiş kullanıcılar
+     const filteredUsers = users.filter(u =>
+          u.full_name?.toLowerCase().includes(userSearch.toLowerCase()) ||
+          u.email?.toLowerCase().includes(userSearch.toLowerCase()) ||
+          u.username?.toLowerCase().includes(userSearch.toLowerCase())
+     )
 
      const handleSubmit = async (e) => {
           e.preventDefault()
@@ -205,20 +296,28 @@ const AdminPanel = () => {
                          <div className="flex items-center gap-3 md:gap-6">
                               <div className="hidden md:flex h-12 px-5 bg-[#fcfaf7] rounded-full border border-[#e3e1dd] items-center gap-3 w-96 shadow-inner transition-all focus-within:ring-2 focus-within:ring-[#C5A059]/20 focus-within:border-[#C5A059]">
                                    <span className="material-symbols-outlined text-gray-400 text-xl">search</span>
-                                   <input type="text" placeholder="İçeriklerde anahtar kelime ara..." className="bg-transparent border-none text-[15px] w-full focus:ring-0 placeholder-gray-400 font-medium" />
+                                   <input
+                                        type="text"
+                                        value={activeTab === 'users' ? userSearch : undefined}
+                                        onChange={(e) => activeTab === 'users' ? setUserSearch(e.target.value) : null}
+                                        placeholder={activeTab === 'users' ? "Kullanıcı ara (isim, email)..." : "İçeriklerde anahtar kelime ara..."}
+                                        className="bg-transparent border-none text-[15px] w-full focus:ring-0 placeholder-gray-400 font-medium"
+                                   />
                               </div>
 
-                              <button
-                                   onClick={() => {
-                                        setFormData({ ...formData, type: activeTab === 'daily_content' ? 'verses' : activeTab })
-                                        setShowModal(true)
-                                   }}
-                                   className="flex items-center gap-2 md:gap-3 px-4 md:px-8 py-2.5 md:py-3.5 bg-[#C5A059] hover:bg-[#b08d4d] text-white rounded-xl md:rounded-2xl font-bold text-xs md:text-sm shadow-xl shadow-[#C5A059]/30 transition-all hover:-translate-y-0.5 active:scale-95"
-                              >
-                                   <span className="material-symbols-outlined text-lg md:text-xl">add_circle</span>
-                                   <span className="hidden md:inline">Yeni İçerik Ekle</span>
-                                   <span className="md:hidden">Ekle</span>
-                              </button>
+                              {activeTab !== 'users' && (
+                                   <button
+                                        onClick={() => {
+                                             setFormData({ ...formData, type: activeTab === 'daily_content' ? 'verses' : activeTab })
+                                             setShowModal(true)
+                                        }}
+                                        className="flex items-center gap-2 md:gap-3 px-4 md:px-8 py-2.5 md:py-3.5 bg-[#C5A059] hover:bg-[#b08d4d] text-white rounded-xl md:rounded-2xl font-bold text-xs md:text-sm shadow-xl shadow-[#C5A059]/30 transition-all hover:-translate-y-0.5 active:scale-95"
+                                   >
+                                        <span className="material-symbols-outlined text-lg md:text-xl">add_circle</span>
+                                        <span className="hidden md:inline">Yeni İçerik Ekle</span>
+                                        <span className="md:hidden">Ekle</span>
+                                   </button>
+                              )}
                          </div>
                     </header>
 
@@ -265,13 +364,18 @@ const AdminPanel = () => {
                                    <div className="px-6 md:px-12 py-6 md:py-10 border-b border-[#e3e1dd] flex flex-col md:flex-row items-center justify-between bg-gray-50/30 gap-4">
                                         <div className="flex items-center gap-4 w-full md:w-auto">
                                              <div className="size-3 rounded-full bg-[#C5A059] animate-pulse shrink-0" />
-                                             <h4 className="text-lg md:text-xl font-bold font-display text-[#141514]">Kayıtlı Tüm Bilgi Hazinesi</h4>
+                                             <h4 className="text-lg md:text-xl font-bold font-display text-[#141514]">
+                                                  {activeTab === 'users' ? 'Kullanıcı Listesi ve Token İşlemleri' : 'Kayıtlı Tüm Bilgi Hazinesi'}
+                                             </h4>
                                         </div>
-                                        <div className="flex p-1 bg-white rounded-2xl border border-[#e3e1dd] shadow-sm w-full md:w-auto overflow-x-auto">
-                                             <button className="flex-1 md:flex-none px-4 md:px-6 py-2.5 text-xs font-bold bg-[#171b17] text-white rounded-xl shadow-lg transition-all whitespace-nowrap">Tümü</button>
-                                             <button className="flex-1 md:flex-none px-4 md:px-6 py-2.5 text-xs font-bold text-gray-400 hover:text-[#171b17] transition-all whitespace-nowrap">Yayında</button>
-                                             <button className="flex-1 md:flex-none px-4 md:px-6 py-2.5 text-xs font-bold text-gray-400 hover:text-[#171b17] transition-all whitespace-nowrap">Arşiv</button>
-                                        </div>
+
+                                        {activeTab !== 'users' && (
+                                             <div className="flex p-1 bg-white rounded-2xl border border-[#e3e1dd] shadow-sm w-full md:w-auto overflow-x-auto">
+                                                  <button className="flex-1 md:flex-none px-4 md:px-6 py-2.5 text-xs font-bold bg-[#171b17] text-white rounded-xl shadow-lg transition-all whitespace-nowrap">Tümü</button>
+                                                  <button className="flex-1 md:flex-none px-4 md:px-6 py-2.5 text-xs font-bold text-gray-400 hover:text-[#171b17] transition-all whitespace-nowrap">Yayında</button>
+                                                  <button className="flex-1 md:flex-none px-4 md:px-6 py-2.5 text-xs font-bold text-gray-400 hover:text-[#171b17] transition-all whitespace-nowrap">Arşiv</button>
+                                             </div>
+                                        )}
                                    </div>
 
                                    {loading ? (
@@ -281,6 +385,69 @@ const AdminPanel = () => {
                                                   <div className="absolute inset-0 border-[6px] border-t-[#C5A059] rounded-full animate-spin"></div>
                                              </div>
                                              <p className="text-gray-400 font-display text-sm md:text-lg animate-pulse tracking-wide text-center">Bilgiler derleniyor...</p>
+                                        </div>
+                                   ) : activeTab === 'users' ? (
+                                        <div className="overflow-x-auto">
+                                             <table className="w-full text-left min-w-[800px] md:min-w-0">
+                                                  <thead>
+                                                       <tr className="bg-gray-50/50 text-[#141514]/40 text-[10px] md:text-[11px] font-bold uppercase tracking-[0.25em] border-b border-[#e3e1dd]">
+                                                            <th className="px-6 md:px-12 py-6 md:py-8 w-1/3">Kullanıcı Bilgileri</th>
+                                                            <th className="px-6 md:px-12 py-6 md:py-8 text-center">Token Bakiyesi</th>
+                                                            <th className="px-6 md:px-12 py-6 md:py-8 hidden sm:table-cell">Kayıt Tarihi</th>
+                                                            <th className="px-6 md:px-12 py-6 md:py-8 text-right">İşlemler</th>
+                                                       </tr>
+                                                  </thead>
+                                                  <tbody className="divide-y divide-[#e3e1dd]">
+                                                       {filteredUsers.map((user) => (
+                                                            <tr key={user.user_id} className="group hover:bg-[#fcfaf7] transition-all duration-500 cursor-default">
+                                                                 <td className="px-6 md:px-12 py-6 md:py-8">
+                                                                      <div className="flex flex-col">
+                                                                           <span className="text-[15px] font-bold text-[#141514] group-hover:text-[#2D5A27] transition-colors">{user.full_name || 'İsimsiz'}</span>
+                                                                           <span className="text-xs text-gray-500">{user.email}</span>
+                                                                           {user.username && <span className="text-[10px] text-gray-400">@{user.username}</span>}
+                                                                      </div>
+                                                                 </td>
+                                                                 <td className="px-6 md:px-12 py-6 md:py-8 text-center">
+                                                                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#C5A059]/10 rounded-lg">
+                                                                           <span className="material-symbols-outlined text-[#C5A059] text-base">token</span>
+                                                                           <span className="font-bold text-[#C5A059] text-lg">{user.tokens || 0}</span>
+                                                                      </div>
+                                                                 </td>
+                                                                 <td className="px-6 md:px-12 py-6 md:py-8 hidden sm:table-cell">
+                                                                      <span className="text-[13px] font-medium text-gray-500">
+                                                                           {new Date(user.created_at).toLocaleDateString('tr-TR')}
+                                                                      </span>
+                                                                 </td>
+                                                                 <td className="px-6 md:px-12 py-6 md:py-8">
+                                                                      <div className="flex justify-end gap-2">
+                                                                           <button
+                                                                                onClick={() => {
+                                                                                     setSelectedUser(user)
+                                                                                     setTokenOperation('add')
+                                                                                     setShowTokenModal(true)
+                                                                                }}
+                                                                                className="px-3 py-1.5 bg-[#2D5A27] hover:bg-[#1b3a18] text-white text-[11px] font-bold uppercase tracking-wider rounded-lg transition-colors flex items-center gap-1 shadow-md"
+                                                                           >
+                                                                                <span className="material-symbols-outlined text-sm">add</span>
+                                                                                Ekle
+                                                                           </button>
+                                                                           <button
+                                                                                onClick={() => {
+                                                                                     setSelectedUser(user)
+                                                                                     setTokenOperation('remove')
+                                                                                     setShowTokenModal(true)
+                                                                                }}
+                                                                                className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-[11px] font-bold uppercase tracking-wider rounded-lg transition-colors flex items-center gap-1 shadow-md"
+                                                                           >
+                                                                                <span className="material-symbols-outlined text-sm">remove</span>
+                                                                                Çıkar
+                                                                           </button>
+                                                                      </div>
+                                                                 </td>
+                                                            </tr>
+                                                       ))}
+                                                  </tbody>
+                                             </table>
                                         </div>
                                    ) : items.length === 0 ? (
                                         <div className="p-20 md:p-40 text-center space-y-8">
@@ -500,6 +667,79 @@ const AdminPanel = () => {
                                              <button type="submit" className="order-1 md:order-2 w-full md:w-auto px-12 md:px-16 py-4 md:py-5 bg-[#171b17] text-white rounded-xl md:rounded-[1.5rem] font-bold text-base md:text-[17px] shadow-[0_24px_48px_-12px_rgba(23,27,23,0.4)] hover:bg-[#2D5A27] hover:-translate-y-2 transition-all duration-500 active:scale-95">Kaydet ve Yayınla</button>
                                         </div>
                                    </form>
+                              </motion.div>
+                         </div>
+                    )}
+               </AnimatePresence>
+
+               {/* Token Management Modal */}
+               <AnimatePresence>
+                    {showTokenModal && selectedUser && (
+                         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                              <motion.div
+                                   initial={{ opacity: 0 }}
+                                   animate={{ opacity: 1 }}
+                                   exit={{ opacity: 0 }}
+                                   onClick={() => setShowTokenModal(false)}
+                                   className="fixed inset-0 bg-[#171b17]/80 backdrop-blur-2xl"
+                              />
+                              <motion.div
+                                   initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                                   animate={{ scale: 1, opacity: 1, y: 0 }}
+                                   exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                                   className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 md:p-8 space-y-6 z-10"
+                              >
+                                   <div className="text-center space-y-2">
+                                        <div className={`size-16 rounded-full mx-auto flex items-center justify-center ${tokenOperation === 'add' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                                             <span className="material-symbols-outlined text-3xl">
+                                                  {tokenOperation === 'add' ? 'add_circle' : 'remove_circle'}
+                                             </span>
+                                        </div>
+                                        <h3 className="text-xl font-bold text-[#141514]">
+                                             {tokenOperation === 'add' ? 'Token Ekle' : 'Token Çıkar'}
+                                        </h3>
+                                        <p className="text-gray-500 font-medium">
+                                             <span className="text-[#141514] font-bold">{selectedUser.full_name}</span> adlı kullanıcı için işlem yapıyorsunuz.
+                                        </p>
+                                   </div>
+
+                                   <div className="space-y-4">
+                                        <div className="space-y-2">
+                                             <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Miktar</label>
+                                             <input
+                                                  type="number"
+                                                  min="1"
+                                                  value={tokenAmount}
+                                                  onChange={(e) => setTokenAmount(parseInt(e.target.value) || 0)}
+                                                  className="w-full h-12 px-4 rounded-xl border-2 border-[#e3e1dd] text-lg font-bold text-center focus:border-[#C5A059] focus:ring-0 transition-colors"
+                                             />
+                                        </div>
+                                        <div className="space-y-2">
+                                             <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Sebep (Opsiyonel)</label>
+                                             <input
+                                                  type="text"
+                                                  value={tokenReason}
+                                                  onChange={(e) => setTokenReason(e.target.value)}
+                                                  placeholder="Örn: Hediye, İade, vb."
+                                                  className="w-full h-12 px-4 rounded-xl border-2 border-[#e3e1dd] text-sm focus:border-[#C5A059] focus:ring-0 transition-colors"
+                                             />
+                                        </div>
+                                   </div>
+
+                                   <div className="flex gap-3 pt-2">
+                                        <button
+                                             onClick={() => setShowTokenModal(false)}
+                                             className="flex-1 h-12 rounded-xl border-2 border-[#e3e1dd] text-[#141514] font-bold hover:bg-gray-50 transition-colors"
+                                        >
+                                             İptal
+                                        </button>
+                                        <button
+                                             onClick={handleTokenAdjust}
+                                             className={`flex-1 h-12 rounded-xl text-white font-bold shadow-lg transition-transform active:scale-95 ${tokenOperation === 'add' ? 'bg-[#2D5A27] hover:bg-[#1b3a18]' : 'bg-red-600 hover:bg-red-700'}`}
+                                        >
+                                             Onayla
+                                        </button>
+                                   </div>
                               </motion.div>
                          </div>
                     )}

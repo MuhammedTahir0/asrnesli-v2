@@ -5,6 +5,7 @@ import { toPng, toBlob } from 'html-to-image'
 import { toast } from 'react-hot-toast'
 import { useAuth } from '../contexts/AuthContext'
 import { consumeToken, grantToken } from '../services/authService'
+import { FaWhatsapp, FaInstagram, FaTelegram, FaTiktok, FaTwitter, FaFacebook, FaYoutube } from 'react-icons/fa'
 
 // Data imports
 import { templates, templateCategories } from '../data/templates'
@@ -85,7 +86,7 @@ const ShareStudio = () => {
                const existingLink = document.querySelector(`link[data-font="${font.id}"]`)
                if (!existingLink) {
                     const link = document.createElement('link')
-                    link.href = `https://fonts.googleapis.com/css2?family=${font.googleFont}&display=swap`
+                    link.href = `https://fonts.googleapis.com/css?family=${font.googleFont}&display=swap`
                     link.rel = 'stylesheet'
                     link.setAttribute('data-font', font.id)
                     document.head.appendChild(link)
@@ -243,7 +244,7 @@ const ShareStudio = () => {
 
      const generateImage = async () => {
           if (!cardRef.current) return null
-          
+
           // Font'un yüklenmesini bekle
           if (currentFont && currentFont.family !== 'inherit') {
                try {
@@ -253,7 +254,7 @@ const ShareStudio = () => {
                     console.warn('Font yükleme hatası:', err)
                }
           }
-          
+
           return await toPng(cardRef.current, {
                pixelRatio: 2,
                cacheBust: true,
@@ -280,7 +281,7 @@ const ShareStudio = () => {
                          console.warn('Font yükleme hatası:', err)
                     }
                }
-               
+
                const blob = await toBlob(cardRef.current, {
                     pixelRatio: 2,
                     cacheBust: true,
@@ -315,9 +316,9 @@ const ShareStudio = () => {
           try {
                const dataUrl = await generateImage()
                if (!dataUrl) return
-              const nextTokens = await consumeAndSyncToken()
-              if (nextTokens === null) return
-              downloadImage(dataUrl)
+               const nextTokens = await consumeAndSyncToken()
+               if (nextTokens === null) return
+               downloadImage(dataUrl)
           } catch (err) {
                console.error('Export hatası:', err)
           } finally {
@@ -325,19 +326,109 @@ const ShareStudio = () => {
           }
      }
 
-     const handleShare = async () => {
+     const handleSharePlatform = async (platform) => {
           if (isProcessing) return
           if (!ensureTokenAccess()) return
           setIsProcessing(true)
+
           try {
-              const nextTokens = await consumeAndSyncToken()
-              if (nextTokens === null) return
-              const success = await shareImage()
-              if (!success) {
-                   await grantAndSyncToken()
-              }
+               // Generate image blob
+               if (!cardRef.current) return
+
+               const OriginalTransform = cardRef.current.style.transform
+               const OriginalBorderRadius = cardRef.current.style.borderRadius
+               const OriginalBoxShadow = cardRef.current.style.boxShadow
+
+               cardRef.current.style.transform = 'none'
+               cardRef.current.style.borderRadius = '0'
+               cardRef.current.style.boxShadow = 'none'
+
+               // Wait for render
+               await new Promise(resolve => setTimeout(resolve, 500))
+
+               const blob = await toBlob(cardRef.current, {
+                    cacheBust: true,
+                    pixelRatio: 2,
+                    quality: 1,
+                    fontEmbedCSS: currentFont?.family ? `@import url('${getGoogleFontsUrl([currentFont])}');` : ''
+               })
+
+               // Restore styles
+               cardRef.current.style.transform = OriginalTransform
+               cardRef.current.style.borderRadius = OriginalBorderRadius
+               cardRef.current.style.boxShadow = OriginalBoxShadow
+
+               if (!blob) throw new Error('Blob oluşturulamadı')
+
+               const file = new File([blob], `asr-nesli-paylasim-${Date.now()}.png`, { type: 'image/png' })
+               const shareData = {
+                    files: [file],
+                    title: 'Asr Nesli Paylaşım',
+                    text: content.text
+               }
+
+               // Consum token
+               const nextTokens = await consumeAndSyncToken()
+               if (nextTokens === null) {
+                    setIsProcessing(false)
+                    return
+               }
+
+               // Platform specific logic
+               switch (platform) {
+                    case 'whatsapp':
+                         if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+                              await navigator.share(shareData)
+                         } else {
+                              // Fallback for desktop or non-supported browsers
+                              const link = document.createElement('a')
+                              link.href = URL.createObjectURL(blob)
+                              link.download = `asr-nesli-whatsapp-${Date.now()}.png`
+                              link.click()
+                              window.open(`https://wa.me/?text=${encodeURIComponent(content.text)}`, '_blank')
+                              toast('Görsel indirildi. WhatsApp açılıyor...', { icon: '📱' })
+                         }
+                         break
+
+                    case 'instagram':
+                         // Instagram doesn't support direct web share to stories easily
+                         // We download the image and try to open instagram
+                         const igLink = document.createElement('a')
+                         igLink.href = URL.createObjectURL(blob)
+                         igLink.download = `asr-nesli-instagram-${Date.now()}.png`
+                         igLink.click()
+
+                         // Try to open instagram customized
+                         setTimeout(() => {
+                              window.location.href = 'instagram://story-camera'
+                         }, 1000)
+                         toast('Görsel indirildi. Instagram hikayelere ekleyebilirsiniz.', { icon: '📸' })
+                         break
+
+                    case 'telegram':
+                         if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+                              await navigator.share(shareData)
+                         } else {
+                              const tgLink = document.createElement('a')
+                              tgLink.href = URL.createObjectURL(blob)
+                              tgLink.download = `asr-nesli-telegram-${Date.now()}.png`
+                              tgLink.click()
+                              window.open(`https://t.me/share/url?url=${encodeURIComponent('https://asrnesli.com')}&text=${encodeURIComponent(content.text)}`, '_blank')
+                              toast('Görsel indirildi. Telegram açılıyor...', { icon: '✈️' })
+                         }
+                         break
+
+                    default:
+                         if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+                              await navigator.share(shareData)
+                         } else {
+                              handleDownload()
+                         }
+               }
+
           } catch (err) {
                console.error('Paylaşım hatası:', err)
+               toast.error('Paylaşım sırasında bir hata oluştu')
           } finally {
                setIsProcessing(false)
           }
@@ -392,8 +483,7 @@ const ShareStudio = () => {
           } else if (selectedGradient) {
                const gradient = gradients.find(g => g.id === selectedGradient)
                if (gradient) {
-                    style.background = `linear-gradient(to bottom right, var(--tw-gradient-stops))`
-                    style.backgroundImage = null
+                    style.backgroundImage = `linear-gradient(to bottom right, var(--tw-gradient-stops))`
                }
           }
 
@@ -422,7 +512,31 @@ const ShareStudio = () => {
                     >
                          <span className="material-symbols-outlined text-xl dark:text-white">arrow_back</span>
                     </button>
-                    <h1 className="text-sm font-bold uppercase tracking-widest dark:text-white">Stüdyo</h1>
+                    <h1 className="text-sm font-bold uppercase tracking-widest dark:text-white hidden md:block">Stüdyo</h1>
+
+                    {/* Social Icons Visual */}
+                    <div className="flex items-center gap-2 md:gap-3 px-3 py-1.5 bg-gray-100/50 dark:bg-white/5 rounded-full backdrop-blur-sm border border-black/5 dark:border-white/5 mx-2">
+                         {[
+                              { Icon: FaWhatsapp, color: 'text-[#25D366]', id: 'wa-status', label: 'WhatsApp' },
+                              { Icon: FaTiktok, color: 'text-black dark:text-white', id: 'tiktok', label: 'TikTok' },
+                              { Icon: FaTwitter, color: 'text-[#1DA1F2]', id: 'twitter', label: 'Twitter' },
+                              { Icon: FaFacebook, color: 'text-[#1877F2]', id: 'fb-post', label: 'Facebook' },
+                              { Icon: FaYoutube, color: 'text-[#FF0000]', id: 'yt-thumbnail', label: 'YouTube' }
+                         ].map((item, index) => (
+                              <button
+                                   key={index}
+                                   onClick={() => {
+                                        setSelectedSize(item.id)
+                                        toast.success(`${item.label} boyutu seçildi`)
+                                   }}
+                                   className={`p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-all ${selectedSize === item.id ? 'bg-white dark:bg-white/20 shadow-sm scale-110' : 'opacity-70 hover:opacity-100'}`}
+                                   title={`${item.label} boyutu için tıkla`}
+                              >
+                                   <item.Icon className={`text-lg md:text-xl ${item.color}`} />
+                              </button>
+                         ))}
+                    </div>
+
                     <button
                          onClick={handleDownload}
                          className="text-accent-green dark:text-primary font-bold text-sm hover:opacity-80 disabled:opacity-50 flex items-center gap-1"
@@ -1050,27 +1164,66 @@ const ShareStudio = () => {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-3 p-3 border-t border-black/5 dark:border-white/5">
+                    {/* Action Buttons */}
+                    <div className="flex flex-col gap-3 p-3 border-t border-black/5 dark:border-white/5">
                          {!canSpendToken && (
-                              <div className="absolute -top-7 left-1/2 -translate-x-1/2 text-[10px] text-[#C5A059] bg-black/70 border border-[#C5A059]/30 px-2 py-1 rounded-full">
+                              <div className="absolute -top-7 left-1/2 -translate-x-1/2 text-[10px] text-[#C5A059] bg-black/70 border border-[#C5A059]/30 px-2 py-1 rounded-full whitespace-nowrap z-50">
                                    Token bitti. Reklam izleyerek devam edin.
                               </div>
                          )}
+
+                         <div className="grid grid-cols-4 gap-2">
+                              {/* WhatsApp */}
+                              {/* WhatsApp */}
+                              <button
+                                   onClick={() => handleSharePlatform('whatsapp')}
+                                   disabled={isProcessing || !canSpendToken}
+                                   className="aspect-square rounded-xl bg-[#25D366] text-white flex flex-col items-center justify-center gap-1 hover:brightness-110 transition-all disabled:opacity-50 disabled:grayscale"
+                              >
+                                   <FaWhatsapp className="text-2xl" />
+                                   <span className="text-[9px] font-bold">WhatsApp</span>
+                              </button>
+
+                              {/* Instagram */}
+                              {/* Instagram */}
+                              <button
+                                   onClick={() => handleSharePlatform('instagram')}
+                                   disabled={isProcessing || !canSpendToken}
+                                   className="aspect-square rounded-xl bg-gradient-to-tr from-[#FFDC80] via-[#FD1D1D] to-[#E1306C] text-white flex flex-col items-center justify-center gap-1 hover:brightness-110 transition-all disabled:opacity-50 disabled:grayscale"
+                              >
+                                   <FaInstagram className="text-2xl" />
+                                   <span className="text-[9px] font-bold">Instagram</span>
+                              </button>
+
+                              {/* Telegram */}
+                              {/* Telegram */}
+                              <button
+                                   onClick={() => handleSharePlatform('telegram')}
+                                   disabled={isProcessing || !canSpendToken}
+                                   className="aspect-square rounded-xl bg-[#0088cc] text-white flex flex-col items-center justify-center gap-1 hover:brightness-110 transition-all disabled:opacity-50 disabled:grayscale"
+                              >
+                                   <FaTelegram className="text-2xl" />
+                                   <span className="text-[9px] font-bold">Telegram</span>
+                              </button>
+
+                              {/* Diğer / Native Share */}
+                              <button
+                                   onClick={() => handleSharePlatform('default')}
+                                   disabled={isProcessing || !canSpendToken}
+                                   className="aspect-square rounded-xl bg-gray-800 text-white flex flex-col items-center justify-center gap-1 hover:bg-gray-700 transition-all disabled:opacity-50 disabled:grayscale"
+                              >
+                                   <span className="material-symbols-outlined text-2xl">share</span>
+                                   <span className="text-[9px] font-bold">Diğer</span>
+                              </button>
+                         </div>
+
                          <button
                               onClick={handleDownload}
                               disabled={isProcessing || !canSpendToken}
-                              className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                              className="w-full py-3 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
                          >
                               <span className="material-symbols-outlined text-lg">download</span>
-                              İndir
-                         </button>
-                         <button
-                              onClick={handleShare}
-                              disabled={isProcessing || !canSpendToken}
-                              className="flex-1 py-3 rounded-xl bg-accent-green text-white font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-                         >
-                              <span className="material-symbols-outlined text-lg">share</span>
-                              Paylaş
+                              Cihaza Kaydet
                          </button>
                     </div>
                </div>

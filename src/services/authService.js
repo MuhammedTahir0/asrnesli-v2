@@ -292,6 +292,73 @@ export const grantToken = async (amount = 1) => {
      }
 }
 
+// =========================================
+// ADMIN TOKEN YÖNETİMİ
+// =========================================
+
+/**
+ * Admin: Kullanıcı listesi ve token bakiyeleri
+ */
+export const adminListUsersTokens = async () => {
+     try {
+          const { data, error } = await supabase.rpc('admin_list_users_tokens')
+          if (error) throw error
+          return { data, error: null }
+     } catch (error) {
+          return { data: null, error }
+     }
+}
+
+/**
+ * Admin: Token ekle/çıkar
+ * @param {string} userId - Hedef kullanıcı ID
+ * @param {number} amount - Eklenecek/çıkarılacak miktar (negatif = çıkar)
+ * @param {string} reason - İşlem sebebi (opsiyonel)
+ */
+export const adminAdjustToken = async (userId, amount, reason = null) => {
+     try {
+          const { data, error } = await supabase.rpc('admin_adjust_token', {
+               target_user_id: userId,
+               adjust_amount: amount,
+               adjust_reason: reason
+          })
+          if (error) throw error
+          return { data, error: null }
+     } catch (error) {
+          return { data: null, error }
+     }
+}
+
+/**
+ * Admin: Token işlem geçmişi
+ * @param {object} filters - Filtreler
+ * @param {string} filters.userId - Kullanıcı ID (opsiyonel)
+ * @param {Date} filters.startDate - Başlangıç tarihi (opsiyonel)
+ * @param {Date} filters.endDate - Bitiş tarihi (opsiyonel)
+ */
+export const adminListTokenLogs = async ({ userId = null, startDate = null, endDate = null } = {}) => {
+     try {
+          const { data, error } = await supabase.rpc('admin_list_token_logs', {
+               target_user_id: userId,
+               start_date: startDate?.toISOString() || null,
+               end_date: endDate?.toISOString() || null
+          })
+          if (error) throw error
+          return { data, error: null }
+     } catch (error) {
+          return { data: null, error }
+     }
+}
+
+/**
+ * Admin e-posta kontrolü
+ */
+export const ADMIN_EMAIL = 'tahircan.kozan@hotmail.com'
+
+export const isAdminUser = (user) => {
+     return user?.email === ADMIN_EMAIL
+}
+
 export default {
      signUpWithEmail,
      signInWithEmail,
@@ -307,5 +374,10 @@ export default {
      uploadAvatar,
      checkUsernameAvailable,
      consumeToken,
-     grantToken
+     grantToken,
+     adminListUsersTokens,
+     adminAdjustToken,
+     adminListTokenLogs,
+     isAdminUser,
+     ADMIN_EMAIL
 }

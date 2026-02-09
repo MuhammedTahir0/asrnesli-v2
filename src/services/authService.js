@@ -31,7 +31,8 @@ export const signUpWithEmail = async ({ email, password, fullName, username, pho
                          full_name: fullName,
                          username: username,
                          phone: phone,
-                         email: email
+                         email: email,
+                         tokens: 5
                     })
 
                if (profileError) {
@@ -265,6 +266,32 @@ export const checkUsernameAvailable = async (username) => {
      }
 }
 
+/**
+ * Token tüket (RPC)
+ */
+export const consumeToken = async () => {
+     try {
+          const { data, error } = await supabase.rpc('consume_token')
+          if (error) throw error
+          return { data, error: null }
+     } catch (error) {
+          return { data: null, error }
+     }
+}
+
+/**
+ * Token artır (RPC)
+ */
+export const grantToken = async (amount = 1) => {
+     try {
+          const { data, error } = await supabase.rpc('grant_token', { amount })
+          if (error) throw error
+          return { data, error: null }
+     } catch (error) {
+          return { data: null, error }
+     }
+}
+
 export default {
      signUpWithEmail,
      signInWithEmail,
@@ -278,5 +305,7 @@ export default {
      updateProfile,
      upsertProfile,
      uploadAvatar,
-     checkUsernameAvailable
+     checkUsernameAvailable,
+     consumeToken,
+     grantToken
 }

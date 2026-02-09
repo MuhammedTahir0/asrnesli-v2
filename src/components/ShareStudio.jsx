@@ -1,20 +1,26 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import html2canvas from 'html2canvas'
+import { toPng, toBlob } from 'html-to-image'
+import { toast } from 'react-hot-toast'
+import { useAuth } from '../contexts/AuthContext'
+import { consumeToken, grantToken } from '../services/authService'
 
 // Data imports
 import { templates, templateCategories } from '../data/templates'
-import { fonts, fontSizes, textAlignments, getGoogleFontsUrl } from '../data/fonts'
+import { fonts, fontCategories, fontSizes, textAlignments, getGoogleFontsUrl } from '../data/fonts'
 import { colorPalettes, gradients } from '../data/colors'
 import { backgrounds, backgroundCategories } from '../data/backgrounds'
-import { stickers, stickerCategories } from '../data/stickers'
 import { platformSizes, platformGroups } from '../data/sizes'
+import { stickers, stickerCategories } from '../data/stickers'
 
 const ShareStudio = () => {
      const location = useLocation()
      const navigate = useNavigate()
+     const { user, profile, setProfile } = useAuth()
      const [isProcessing, setIsProcessing] = useState(false)
+     const [adRewardLoading, setAdRewardLoading] = useState(false)
+     const [showAdPanel, setShowAdPanel] = useState(false)
      const cardRef = useRef(null)
      const fileInputRef = useRef(null)
 
@@ -32,8 +38,10 @@ const ShareStudio = () => {
      const [fontSize, setFontSize] = useState('md')
      const [textAlign, setTextAlign] = useState('center')
      const [selectedPalette, setSelectedPalette] = useState(null)
+     const [selectedGradient, setSelectedGradient] = useState(null)
      const [selectedBackground, setSelectedBackground] = useState(null)
-     const [addedStickers, setAddedStickers] = useState([])
+     const [customColors, setCustomColors] = useState(null)
+
 
      // Watermark State
      const [watermark, setWatermark] = useState({
@@ -46,7 +54,17 @@ const ShareStudio = () => {
      const [activeTab, setActiveTab] = useState('template')
      const [templateFilter, setTemplateFilter] = useState('all')
      const [bgFilter, setBgFilter] = useState('all')
+     const [fontFilter, setFontFilter] = useState('all')
      const [stickerFilter, setStickerFilter] = useState('all')
+     const [addedStickers, setAddedStickers] = useState([])
+
+
+     const ADSENSE_CLIENT = 'ca-pub-8915311494926639'
+     const ADSENSE_SLOT = import.meta.env.VITE_ADSENSE_SLOT || ''
+
+     const tokens = Number.isFinite(profile?.tokens) ? profile.tokens : 0
+     const isProfileReady = !!profile
+     const canSpendToken = isProfileReady && tokens > 0
 
      // Load content from navigation state
      useEffect(() => {
@@ -75,11 +93,25 @@ const ShareStudio = () => {
           }
      }, [selectedFont])
 
+     useEffect(() => {
+          if (!showAdPanel || !ADSENSE_SLOT) return
+          try {
+               window.adsbygoogle = window.adsbygoogle || []
+               window.adsbygoogle.push({})
+          } catch (err) {
+               console.warn('AdSense yükleme hatası:', err)
+          }
+     }, [showAdPanel, ADSENSE_SLOT])
+
+     useEffect(() => {
+          if (tokens > 0) setShowAdPanel(false)
+     }, [tokens])
+
      // Get current configurations
      const currentTemplate = templates[template]
      const currentSize = platformSizes.find(s => s.id === selectedSize)
-     const currentFont = fonts.find(f => f.id === selectedFont)
-     const currentFontSize = fontSizes.find(s => s.id === fontSize)
+     const currentFont = fonts.find(f => f.id === selectedFont) || fonts[0]
+     const currentFontSize = fontSizes.find(s => s.id === fontSize) || fontSizes[1]
 
      // Filtered data
      const filteredTemplates = templateFilter === 'all'
@@ -90,9 +122,14 @@ const ShareStudio = () => {
           ? backgrounds
           : backgrounds.filter(b => b.category === bgFilter)
 
+     const filteredFonts = fontFilter === 'all'
+          ? fonts
+          : fonts.filter(f => f.category === fontFilter)
+
      const filteredStickers = stickerFilter === 'all'
           ? stickers
           : stickers.filter(s => s.category === stickerFilter)
+
 
      // Handlers
      const handleImageUpload = (e) => {
@@ -114,41 +151,173 @@ const ShareStudio = () => {
           setTemplate('nature')
      }
 
+     const handlePaletteSelect = (palette) => {
+          setSelectedPalette(palette.id)
+          setSelectedGradient(null)
+          setCustomColors({
+               background: palette.background,
+               text: palette.text,
+               accent: palette.accent,
+               primary: palette.primary,
+               secondary: palette.secondary
+          })
+     }
+
+     const handleGradientSelect = (gradient) => {
+          setSelectedGradient(gradient.id)
+          setSelectedPalette(null)
+          setTemplate('gradient')
+          setCustomColors(null)
+     }
+
      const handleAddSticker = (sticker) => {
-          setAddedStickers(prev => [...prev, {
-               ...sticker,
-               id: `${sticker.id}-${Date.now()}`,
+          const newSticker = {
+               id: `sticker-${Date.now()}-${Math.random()}`,
+               emoji: sticker.emoji,
                x: 50,
                y: 50,
-               scale: 1
-          }])
+               size: 48
+          }
+          setAddedStickers(prev => [...prev, newSticker])
      }
 
      const handleRemoveSticker = (stickerId) => {
           setAddedStickers(prev => prev.filter(s => s.id !== stickerId))
      }
 
-     const generateCanvas = async () => {
+     const extractTokens = (data) => {
+          if (Array.isArray(data)) {
+               const first = data[0]
+               if (first && typeof first.tokens === 'number') return first.tokens
+          }
+          if (data && typeof data === 'object' && typeof data.tokens === 'number') {
+               return data.tokens
+          }
+          if (typeof data === 'number') return data
+          return null
+     }
+
+     const updateTokens = (nextTokens) => {
+          if (typeof nextTokens !== 'number') return
+          setProfile(prev => ({ ...(prev || {}), tokens: nextTokens }))
+     }
+
+     const ensureTokenAccess = () => {
+          if (!user) {
+               toast.error('Devam etmek için giriş yapmalısınız.')
+               return false
+          }
+          if (!isProfileReady) {
+               toast.error('Token bilgileriniz yükleniyor.')
+               return false
+          }
+          if (tokens <= 0) {
+               toast.error('Token yetersiz.')
+               setShowAdPanel(true)
+               return false
+          }
+          return true
+     }
+
+     const consumeAndSyncToken = async () => {
+          const { data, error } = await consumeToken()
+          if (error) {
+               toast.error('Token düşürülemedi. Lütfen tekrar deneyin.')
+               return null
+          }
+          const nextTokens = extractTokens(data)
+          updateTokens(nextTokens)
+          return nextTokens
+     }
+
+     const grantAndSyncToken = async () => {
+          const { data, error } = await grantToken(1)
+          if (error) {
+               toast.error('Reklam doğrulanamadı. Lütfen tekrar deneyin.')
+               return null
+          }
+          const nextTokens = extractTokens(data)
+          updateTokens(nextTokens)
+          return nextTokens
+     }
+
+     const generateImage = async () => {
           if (!cardRef.current) return null
-          return await html2canvas(cardRef.current, {
-               scale: 2,
-               useCORS: true,
-               backgroundColor: null,
-               logging: false
+          
+          // Font'un yüklenmesini bekle
+          if (currentFont && currentFont.family !== 'inherit') {
+               try {
+                    await document.fonts.ready
+                    await document.fonts.load(`16px "${currentFont.family}"`)
+               } catch (err) {
+                    console.warn('Font yükleme hatası:', err)
+               }
+          }
+          
+          return await toPng(cardRef.current, {
+               pixelRatio: 2,
+               cacheBust: true,
+               fontEmbedCSS: currentFont?.family ? `@import url('${getGoogleFontsUrl([currentFont])}');` : ''
           })
+     }
+
+     const downloadImage = (dataUrl) => {
+          const link = document.createElement('a')
+          link.download = `asr-nesli-${Date.now()}.png`
+          link.href = dataUrl
+          link.click()
+     }
+
+     const shareImage = async () => {
+          if (!cardRef.current) return false
+          try {
+               // Font'un yüklenmesini bekle
+               if (currentFont && currentFont.family !== 'inherit') {
+                    try {
+                         await document.fonts.ready
+                         await document.fonts.load(`16px "${currentFont.family}"`)
+                    } catch (err) {
+                         console.warn('Font yükleme hatası:', err)
+                    }
+               }
+               
+               const blob = await toBlob(cardRef.current, {
+                    pixelRatio: 2,
+                    cacheBust: true,
+                    fontEmbedCSS: currentFont?.family ? `@import url('${getGoogleFontsUrl([currentFont])}');` : ''
+               })
+               const file = new File([blob], 'share.png', { type: 'image/png' })
+               if (navigator.share && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                         files: [file],
+                         title: 'Asr Nesli Paylaşım',
+                         text: content.text
+                    })
+                    return true
+               }
+               // Fallback to download
+               const dataUrl = await toPng(cardRef.current, {
+                    pixelRatio: 2,
+                    fontEmbedCSS: currentFont?.family ? `@import url('${getGoogleFontsUrl([currentFont])}');` : ''
+               })
+               downloadImage(dataUrl)
+               return true
+          } catch (err) {
+               console.error('Share error:', err)
+               return false
+          }
      }
 
      const handleDownload = async () => {
           if (isProcessing) return
+          if (!ensureTokenAccess()) return
           setIsProcessing(true)
           try {
-               const canvas = await generateCanvas()
-               if (!canvas) return
-               const image = canvas.toDataURL('image/png', 1.0)
-               const link = document.createElement('a')
-               link.download = `asr-nesli-${Date.now()}.png`
-               link.href = image
-               link.click()
+               const dataUrl = await generateImage()
+               if (!dataUrl) return
+              const nextTokens = await consumeAndSyncToken()
+              if (nextTokens === null) return
+              downloadImage(dataUrl)
           } catch (err) {
                console.error('Export hatası:', err)
           } finally {
@@ -158,25 +327,38 @@ const ShareStudio = () => {
 
      const handleShare = async () => {
           if (isProcessing) return
+          if (!ensureTokenAccess()) return
           setIsProcessing(true)
           try {
-               const canvas = await generateCanvas()
-               if (!canvas) return
-               const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
-               const file = new File([blob], 'share.png', { type: 'image/png' })
-               if (navigator.share) {
-                    await navigator.share({
-                         files: [file],
-                         title: 'Asr Nesli Paylaşım',
-                         text: content.text
-                    })
-               } else {
-                    handleDownload()
-               }
+              const nextTokens = await consumeAndSyncToken()
+              if (nextTokens === null) return
+              const success = await shareImage()
+              if (!success) {
+                   await grantAndSyncToken()
+              }
           } catch (err) {
                console.error('Paylaşım hatası:', err)
           } finally {
                setIsProcessing(false)
+          }
+     }
+
+     const handleAdReward = async () => {
+          if (adRewardLoading) return
+          if (!user) {
+               toast.error('Token kazanmak için giriş yapmalısınız.')
+               return
+          }
+          setAdRewardLoading(true)
+          try {
+               const nextTokens = await grantAndSyncToken()
+               if (typeof nextTokens === 'number') {
+                    toast.success('+1 token eklendi.')
+               }
+          } catch (err) {
+               console.error('Token ödül hatası:', err)
+          } finally {
+               setAdRewardLoading(false)
           }
      }
 
@@ -188,6 +370,36 @@ const ShareStudio = () => {
           return null
      }
 
+     // Get canvas style with custom colors
+     const getCanvasStyle = () => {
+          const style = {
+               aspectRatio: currentSize.aspect,
+               maxHeight: '55vh',
+               width: 'auto',
+               fontFamily: currentFont?.family || 'inherit'
+          }
+
+          const bgImage = getBackgroundImage()
+          if (bgImage) {
+               style.backgroundImage = `url(${bgImage})`
+               style.backgroundSize = 'cover'
+               style.backgroundPosition = 'center'
+          }
+
+          if (customColors) {
+               style.backgroundColor = customColors.background
+               style.color = customColors.text
+          } else if (selectedGradient) {
+               const gradient = gradients.find(g => g.id === selectedGradient)
+               if (gradient) {
+                    style.background = `linear-gradient(to bottom right, var(--tw-gradient-stops))`
+                    style.backgroundImage = null
+               }
+          }
+
+          return style
+     }
+
      // Tab definitions
      const tabs = [
           { id: 'template', icon: 'palette', label: 'Şablon' },
@@ -195,7 +407,7 @@ const ShareStudio = () => {
           { id: 'font', icon: 'text_fields', label: 'Yazı' },
           { id: 'color', icon: 'colorize', label: 'Renk' },
           { id: 'background', icon: 'image', label: 'Arka Plan' },
-          { id: 'sticker', icon: 'emoji_emotions', label: 'Sticker' },
+          { id: 'sticker', icon: 'mood', label: 'Sticker' },
           { id: 'watermark', icon: 'branding_watermark', label: 'Damga' },
           { id: 'edit', icon: 'edit_note', label: 'Metin' }
      ]
@@ -214,28 +426,44 @@ const ShareStudio = () => {
                     <button
                          onClick={handleDownload}
                          className="text-accent-green dark:text-primary font-bold text-sm hover:opacity-80 disabled:opacity-50 flex items-center gap-1"
-                         disabled={isProcessing}
+                         disabled={isProcessing || !canSpendToken}
                     >
                          <span className="material-symbols-outlined text-lg">save</span>
                          Kaydet
                     </button>
                </header>
 
+               {/* Token Warning Banner */}
+               {isProfileReady && tokens === 0 && (
+                    <div className="bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-3 shadow-lg">
+                         <div className="flex items-center justify-between gap-3 text-white">
+                              <div className="flex items-center gap-2">
+                                   <span className="material-symbols-outlined text-2xl animate-pulse">error</span>
+                                   <div>
+                                        <p className="font-bold text-sm">Token Bitti!</p>
+                                        <p className="text-xs opacity-90">İndirme ve paylaşım için token gereklidir.</p>
+                                   </div>
+                              </div>
+                              <button
+                                   onClick={() => {
+                                        setActiveTab('watermark')
+                                        setTimeout(() => setShowAdPanel(true), 300)
+                                   }}
+                                   className="flex-shrink-0 px-4 py-2 bg-white text-orange-600 rounded-lg text-xs font-bold hover:bg-gray-100 transition-all"
+                              >
+                                   Token Al
+                              </button>
+                         </div>
+                    </div>
+               )}
+
                {/* Canvas Area */}
                <div className="flex-1 relative bg-gray-100 dark:bg-[#121212] flex items-center justify-center p-4 overflow-hidden">
                     <div className="relative z-10 shadow-2xl shadow-black/30 rounded-lg overflow-hidden">
                          <div
                               ref={cardRef}
-                              className={`relative flex flex-col items-center justify-center p-6 transition-all duration-300 overflow-hidden ${currentTemplate.container}`}
-                              style={{
-                                   aspectRatio: currentSize.aspect,
-                                   maxHeight: '55vh',
-                                   width: 'auto',
-                                   fontFamily: currentFont?.family || 'inherit',
-                                   backgroundImage: getBackgroundImage() ? `url(${getBackgroundImage()})` : undefined,
-                                   backgroundSize: 'cover',
-                                   backgroundPosition: 'center'
-                              }}
+                              className={`relative flex flex-col items-center justify-center p-6 transition-all duration-300 overflow-hidden ${selectedGradient ? 'bg-gradient-to-br ' + gradients.find(g => g.id === selectedGradient)?.value : currentTemplate.container}`}
+                              style={getCanvasStyle()}
                          >
                               {/* Overlay */}
                               {currentTemplate.overlay === 'arabesque' && (
@@ -256,6 +484,44 @@ const ShareStudio = () => {
                                         ))}
                                    </div>
                               )}
+                              {currentTemplate.overlay === 'mosque-silhouette' && (
+                                   <div className="absolute bottom-0 inset-x-0 h-32 opacity-20">
+                                        <svg viewBox="0 0 1080 200" className="w-full h-full" fill="currentColor">
+                                             <path d="M0,200 L0,100 Q270,80 540,90 Q810,80 1080,100 L1080,200 Z" />
+                                             <ellipse cx="540" cy="50" rx="40" ry="60" />
+                                             <rect x="520" y="70" width="40" height="130" />
+                                             <rect x="480" y="120" width="120" height="80" />
+                                        </svg>
+                                   </div>
+                              )}
+                              {currentTemplate.overlay === 'lanterns' && (
+                                   <div className="absolute inset-0">
+                                        {[...Array(8)].map((_, i) => (
+                                             <div
+                                                  key={i}
+                                                  className="absolute text-4xl opacity-10 animate-pulse"
+                                                  style={{
+                                                       left: `${10 + i * 12}%`,
+                                                       top: `${5 + (i % 2) * 10}%`,
+                                                       animationDelay: `${i * 0.3}s`
+                                                  }}
+                                             >
+                                                  🏮
+                                             </div>
+                                        ))}
+                                   </div>
+                              )}
+                              {currentTemplate.overlay === 'gradient-overlay' && (
+                                   <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-purple-900/30" />
+                              )}
+                              {currentTemplate.overlay === 'geometric-pattern' && (
+                                   <div className="absolute inset-0 opacity-5">
+                                        <div className="w-full h-full" style={{
+                                             backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 35px, currentColor 35px, currentColor 36px),
+                                                  repeating-linear-gradient(-45deg, transparent, transparent 35px, currentColor 35px, currentColor 36px)`
+                                        }} />
+                                   </div>
+                              )}
                               {getBackgroundImage() && (
                                    <div className="absolute inset-0 bg-black/40 z-0" />
                               )}
@@ -273,8 +539,33 @@ const ShareStudio = () => {
                               {currentTemplate.decoration === 'glow' && (
                                    <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-accent-green/20 blur-[100px] rounded-full" />
                               )}
+                              {currentTemplate.decoration === 'glow-warm' && (
+                                   <div className="absolute inset-0 bg-gradient-radial from-amber-400/10 via-transparent to-transparent" />
+                              )}
                               {currentTemplate.decoration === 'crescent' && (
                                    <div className="absolute top-6 right-6 text-4xl opacity-30">☪️</div>
+                              )}
+                              {currentTemplate.decoration === 'sun-rays' && (
+                                   <div className="absolute inset-0 overflow-hidden">
+                                        {[...Array(12)].map((_, i) => (
+                                             <div
+                                                  key={i}
+                                                  className="absolute top-1/2 left-1/2 w-1 h-full bg-gradient-to-b from-transparent via-amber-300/20 to-transparent"
+                                                  style={{
+                                                       transform: `rotate(${i * 30}deg) translateY(-50%)`,
+                                                       transformOrigin: 'center center'
+                                                  }}
+                                             />
+                                        ))}
+                                   </div>
+                              )}
+                              {currentTemplate.decoration === 'moon' && (
+                                   <div className="absolute top-6 right-6 text-4xl opacity-40">🌙</div>
+                              )}
+                              {currentTemplate.decoration === 'border-geometric' && (
+                                   <div className="absolute inset-4 border-2 border-[#C5A059]/30 pointer-events-none z-10" style={{
+                                        clipPath: 'polygon(0 10%, 10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%)'
+                                   }} />
                               )}
 
                               {/* Content */}
@@ -300,13 +591,15 @@ const ShareStudio = () => {
                               {addedStickers.map(sticker => (
                                    <div
                                         key={sticker.id}
-                                        className="absolute text-4xl cursor-move z-30"
+                                        className="absolute z-20 cursor-pointer hover:scale-110 transition-transform"
                                         style={{
                                              left: `${sticker.x}%`,
                                              top: `${sticker.y}%`,
-                                             transform: `translate(-50%, -50%) scale(${sticker.scale})`
+                                             fontSize: `${sticker.size}px`,
+                                             transform: 'translate(-50%, -50%)'
                                         }}
                                         onClick={() => handleRemoveSticker(sticker.id)}
+                                        title="Kaldırmak için tıkla"
                                    >
                                         {sticker.emoji}
                                    </div>
@@ -328,6 +621,55 @@ const ShareStudio = () => {
 
                {/* Controls */}
                <div className="shrink-0 bg-surface-light dark:bg-[#1a1c1a] border-t border-black/5 dark:border-white/5 pb-safe z-30">
+                    {/* Token Bar */}
+                    <div className="px-3 pt-3">
+                         <div className="relative overflow-hidden rounded-2xl border border-[#C5A059]/25 bg-gradient-to-br from-[#13110b] via-[#1a1c1a] to-[#0f0f0d] text-white p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                              <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')]" />
+                              <div className="relative flex items-center justify-between gap-4">
+                                   <div>
+                                        <p className="text-[10px] uppercase tracking-[0.35em] text-[#C5A059]/80">Token Durumu</p>
+                                        <p className="text-lg font-semibold">
+                                             {isProfileReady ? `${tokens} token kaldı` : 'Token yükleniyor...'}
+                                        </p>
+                                        <p className="text-[11px] text-white/60">Her indirme/paylaşım 1 token.</p>
+                                   </div>
+                              </div>
+                              {isProfileReady && tokens <= 0 && (
+                                   <div className="relative mt-3 rounded-xl border border-[#C5A059]/20 bg-black/30 p-3">
+                                        <p className="text-[11px] text-white/70 mb-2">Token bitti. Reklam izleyerek devam edebilirsiniz.</p>
+                                        <button
+                                             onClick={() => setShowAdPanel(prev => !prev)}
+                                             className="w-full py-2.5 rounded-lg bg-gradient-to-r from-[#C5A059] to-[#E7D3A1] text-[#1a1c1a] text-xs font-bold uppercase tracking-widest shadow-lg shadow-[#C5A059]/20"
+                                        >
+                                             Reklam İzle ve Token Kazan
+                                        </button>
+                                        {showAdPanel && (
+                                             <div className="mt-3 space-y-2">
+                                                  {ADSENSE_SLOT ? (
+                                                       <ins
+                                                            className="adsbygoogle block"
+                                                            style={{ display: 'block' }}
+                                                            data-ad-client={ADSENSE_CLIENT}
+                                                            data-ad-slot={ADSENSE_SLOT}
+                                                            data-ad-format="auto"
+                                                            data-full-width-responsive="true"
+                                                       />
+                                                  ) : (
+                                                       <div className="text-[10px] text-white/60">Reklam alanı hazırlanıyor.</div>
+                                                  )}
+                                                  <button
+                                                       onClick={handleAdReward}
+                                                       disabled={adRewardLoading}
+                                                       className="w-full py-2 rounded-lg border border-[#C5A059]/40 text-[#C5A059] text-xs font-bold uppercase tracking-widest disabled:opacity-60"
+                                                  >
+                                                       {adRewardLoading ? 'Kontrol ediliyor...' : '+1 Token Kazan'}
+                                                  </button>
+                                             </div>
+                                        )}
+                                   </div>
+                              )}
+                         </div>
+                    </div>
                     {/* Tab Bar - Scrollable */}
                     <div className="overflow-x-auto no-scrollbar border-b border-black/5 dark:border-white/5">
                          <div className="flex min-w-max">
@@ -357,19 +699,21 @@ const ShareStudio = () => {
                                         className="p-3 space-y-3"
                                    >
                                         {/* Category Filter */}
-                                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                                             {templateCategories.map(cat => (
-                                                  <button
-                                                       key={cat.id}
-                                                       onClick={() => setTemplateFilter(cat.id)}
-                                                       className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${templateFilter === cat.id
-                                                            ? 'bg-accent-green text-white'
-                                                            : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'
-                                                            }`}
-                                                  >
-                                                       {cat.name}
-                                                  </button>
-                                             ))}
+                                        <div className="overflow-x-auto no-scrollbar">
+                                             <div className="flex gap-2 pb-1 min-w-max pr-3">
+                                                  {templateCategories.map(cat => (
+                                                       <button
+                                                            key={cat.id}
+                                                            onClick={() => setTemplateFilter(cat.id)}
+                                                            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${templateFilter === cat.id
+                                                                 ? 'bg-accent-green text-white'
+                                                                 : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'
+                                                                 }`}
+                                                       >
+                                                            {cat.name}
+                                                       </button>
+                                                  ))}
+                                             </div>
                                         </div>
                                         {/* Template Grid */}
                                         <div className="grid grid-cols-4 gap-2">
@@ -394,27 +738,34 @@ const ShareStudio = () => {
                               {activeTab === 'size' && (
                                    <motion.div
                                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                                        className="p-3"
+                                        className="p-3 space-y-4"
                                    >
-                                        <div className="grid grid-cols-3 gap-2">
-                                             {platformSizes.map((size) => (
-                                                  <button
-                                                       key={size.id}
-                                                       onClick={() => setSelectedSize(size.id)}
-                                                       className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${selectedSize === size.id
-                                                            ? 'bg-accent-green/10 ring-2 ring-accent-green'
-                                                            : 'bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10'
-                                                            }`}
-                                                  >
-                                                       <div
-                                                            className={`border-2 rounded transition-all ${selectedSize === size.id ? 'border-accent-green' : 'border-gray-300 dark:border-white/20'
-                                                                 }`}
-                                                            style={{ width: '24px', aspectRatio: size.aspect }}
-                                                       />
-                                                       <span className="text-[10px] font-bold dark:text-white text-center leading-tight">{size.name}</span>
-                                                  </button>
-                                             ))}
-                                        </div>
+                                        {platformGroups.map(group => (
+                                             <div key={group.id}>
+                                                  <h3 className="text-[10px] font-bold uppercase text-gray-500 dark:text-gray-400 mb-2">
+                                                       {group.name}
+                                                  </h3>
+                                                  <div className="grid grid-cols-3 gap-2">
+                                                       {platformSizes.filter(s => s.platform === group.id).map((size) => (
+                                                            <button
+                                                                 key={size.id}
+                                                                 onClick={() => setSelectedSize(size.id)}
+                                                                 className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${selectedSize === size.id
+                                                                      ? 'bg-accent-green/10 ring-2 ring-accent-green'
+                                                                      : 'bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10'
+                                                                      }`}
+                                                            >
+                                                                 <div
+                                                                      className={`border-2 rounded transition-all ${selectedSize === size.id ? 'border-accent-green' : 'border-gray-300 dark:border-white/20'
+                                                                           }`}
+                                                                      style={{ width: '24px', aspectRatio: size.aspect }}
+                                                                 />
+                                                                 <span className="text-[10px] font-bold dark:text-white text-center leading-tight">{size.name}</span>
+                                                            </button>
+                                                       ))}
+                                                  </div>
+                                             </div>
+                                        ))}
                                    </motion.div>
                               )}
 
@@ -424,15 +775,32 @@ const ShareStudio = () => {
                                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                                         className="p-3 space-y-4"
                                    >
+                                        {/* Font Category Filter */}
+                                        <div className="overflow-x-auto no-scrollbar">
+                                             <div className="flex gap-2 pb-1 min-w-max pr-3">
+                                                  {fontCategories.map(cat => (
+                                                       <button
+                                                            key={cat.id}
+                                                            onClick={() => setFontFilter(cat.id)}
+                                                            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${fontFilter === cat.id
+                                                                 ? 'bg-accent-green text-white'
+                                                                 : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'
+                                                                 }`}
+                                                       >
+                                                            {cat.name}
+                                                       </button>
+                                                  ))}
+                                             </div>
+                                        </div>
                                         {/* Font Selection */}
                                         <div>
                                              <label className="text-[10px] font-bold uppercase text-gray-500 mb-2 block">Yazı Tipi</label>
-                                             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                                                  {fonts.slice(0, 8).map(font => (
+                                             <div className="grid grid-cols-2 gap-2">
+                                                  {filteredFonts.map(font => (
                                                        <button
                                                             key={font.id}
                                                             onClick={() => setSelectedFont(font.id)}
-                                                            className={`flex-shrink-0 px-3 py-2 rounded-lg text-sm transition-all ${selectedFont === font.id
+                                                            className={`px-3 py-2 rounded-lg text-sm transition-all ${selectedFont === font.id
                                                                  ? 'bg-accent-green text-white'
                                                                  : 'bg-gray-100 dark:bg-white/10 dark:text-white'
                                                                  }`}
@@ -493,7 +861,7 @@ const ShareStudio = () => {
                                              {colorPalettes.map(palette => (
                                                   <button
                                                        key={palette.id}
-                                                       onClick={() => setSelectedPalette(palette.id)}
+                                                       onClick={() => handlePaletteSelect(palette)}
                                                        className={`aspect-square rounded-xl overflow-hidden ring-2 transition-all ${selectedPalette === palette.id ? 'ring-accent-green scale-105' : 'ring-transparent'
                                                             }`}
                                                        style={{ background: `linear-gradient(135deg, ${palette.primary}, ${palette.secondary})` }}
@@ -506,7 +874,8 @@ const ShareStudio = () => {
                                              {gradients.map(grad => (
                                                   <button
                                                        key={grad.id}
-                                                       className={`aspect-[2/1] rounded-lg bg-gradient-to-br ${grad.value}`}
+                                                       onClick={() => handleGradientSelect(grad)}
+                                                       className={`aspect-[2/1] rounded-lg bg-gradient-to-br ${grad.value} ring-2 transition-all ${selectedGradient === grad.id ? 'ring-accent-green scale-105' : 'ring-transparent'}`}
                                                        title={grad.name}
                                                   />
                                              ))}
@@ -573,27 +942,29 @@ const ShareStudio = () => {
                                         className="p-3 space-y-3"
                                    >
                                         {/* Category Filter */}
-                                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                                             {stickerCategories.map(cat => (
-                                                  <button
-                                                       key={cat.id}
-                                                       onClick={() => setStickerFilter(cat.id)}
-                                                       className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${stickerFilter === cat.id
-                                                            ? 'bg-accent-green text-white'
-                                                            : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'
-                                                            }`}
-                                                  >
-                                                       {cat.name}
-                                                  </button>
-                                             ))}
+                                        <div className="overflow-x-auto no-scrollbar">
+                                             <div className="flex gap-2 pb-1 min-w-max pr-3">
+                                                  {stickerCategories.map(cat => (
+                                                       <button
+                                                            key={cat.id}
+                                                            onClick={() => setStickerFilter(cat.id)}
+                                                            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${stickerFilter === cat.id
+                                                                 ? 'bg-accent-green text-white'
+                                                                 : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'
+                                                                 }`}
+                                                       >
+                                                            {cat.name}
+                                                       </button>
+                                                  ))}
+                                             </div>
                                         </div>
                                         {/* Sticker Grid */}
-                                        <div className="grid grid-cols-8 gap-2">
+                                        <div className="grid grid-cols-6 gap-2">
                                              {filteredStickers.map(sticker => (
                                                   <button
                                                        key={sticker.id}
                                                        onClick={() => handleAddSticker(sticker)}
-                                                       className="aspect-square rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center text-2xl hover:scale-110 transition-transform"
+                                                       className="aspect-square rounded-xl bg-gray-100 dark:bg-white/5 hover:bg-accent-green/10 hover:scale-110 transition-all flex items-center justify-center text-3xl"
                                                        title={sticker.name}
                                                   >
                                                        {sticker.emoji}
@@ -601,7 +972,9 @@ const ShareStudio = () => {
                                              ))}
                                         </div>
                                         {addedStickers.length > 0 && (
-                                             <p className="text-[10px] text-gray-500 text-center">Silmek için sticker'a tıklayın</p>
+                                             <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
+                                                  Sticker'ı kaldırmak için üzerine tıklayın
+                                             </p>
                                         )}
                                    </motion.div>
                               )}
@@ -678,9 +1051,14 @@ const ShareStudio = () => {
 
                     {/* Action Buttons */}
                     <div className="flex gap-3 p-3 border-t border-black/5 dark:border-white/5">
+                         {!canSpendToken && (
+                              <div className="absolute -top-7 left-1/2 -translate-x-1/2 text-[10px] text-[#C5A059] bg-black/70 border border-[#C5A059]/30 px-2 py-1 rounded-full">
+                                   Token bitti. Reklam izleyerek devam edin.
+                              </div>
+                         )}
                          <button
                               onClick={handleDownload}
-                              disabled={isProcessing}
+                              disabled={isProcessing || !canSpendToken}
                               className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
                          >
                               <span className="material-symbols-outlined text-lg">download</span>
@@ -688,7 +1066,7 @@ const ShareStudio = () => {
                          </button>
                          <button
                               onClick={handleShare}
-                              disabled={isProcessing}
+                              disabled={isProcessing || !canSpendToken}
                               className="flex-1 py-3 rounded-xl bg-accent-green text-white font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
                          >
                               <span className="material-symbols-outlined text-lg">share</span>

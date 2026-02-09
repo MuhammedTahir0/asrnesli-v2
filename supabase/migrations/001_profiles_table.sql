@@ -9,9 +9,14 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   phone TEXT,
   avatar_url TEXT,
   email TEXT NOT NULL,
+  tokens INTEGER NOT NULL DEFAULT 5,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Varolan tablolar için tokens alanını ekle
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS tokens INTEGER NOT NULL DEFAULT 5;
 
 -- 2. RLS (Row Level Security) aktifleştir
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
@@ -22,8 +27,14 @@ CREATE POLICY "Users can view own profile" ON public.profiles
   FOR SELECT USING (auth.uid() = id);
 
 -- Kullanıcı kendi profilini güncelleyebilir
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile" ON public.profiles
-  FOR UPDATE USING (auth.uid() = id);
+  FOR UPDATE
+  USING (auth.uid() = id)
+  WITH CHECK (
+    auth.uid() = id
+    AND tokens = (SELECT tokens FROM public.profiles WHERE id = auth.uid())
+  );
 
 -- Kullanıcı kendi profilini oluşturabilir
 CREATE POLICY "Users can insert own profile" ON public.profiles
@@ -47,12 +58,13 @@ CREATE TRIGGER profiles_updated_at
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, full_name, username, email)
+  INSERT INTO public.profiles (id, full_name, username, email, tokens)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', 'Anonim'),
     COALESCE(NEW.raw_user_meta_data->>'username', LOWER(REPLACE(NEW.email, '@', '_'))),
-    NEW.email
+    NEW.email,
+    5
   )
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
@@ -73,6 +85,58 @@ CREATE TRIGGER on_auth_user_created
 -- 7. Index'ler
 CREATE INDEX IF NOT EXISTS profiles_username_idx ON public.profiles(username);
 CREATE INDEX IF NOT EXISTS profiles_email_idx ON public.profiles(email);
+
+-- 8. Token RPC Fonksiyonları (güvenli ve atomik)
+CREATE OR REPLACE FUNCTION public.consume_token()
+RETURNS INTEGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  new_tokens INTEGER;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  UPDATE public.profiles
+  SET tokens = tokens - 1
+  WHERE id = auth.uid() AND tokens > 0
+  RETURNING tokens INTO new_tokens;
+
+  IF new_tokens IS NULL THEN
+    RAISE EXCEPTION 'Insufficient tokens';
+  END IF;
+
+  RETURN new_tokens;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.grant_token(amount INTEGER DEFAULT 1)
+RETURNS INTEGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  new_tokens INTEGER;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  UPDATE public.profiles
+  SET tokens = tokens + GREATEST(amount, 0)
+  WHERE id = auth.uid()
+  RETURNING tokens INTO new_tokens;
+
+  RETURN new_tokens;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.consume_token() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.grant_token(INTEGER) TO authenticated;
 
 -- Tamamlandı!
 -- Bu SQL'i Supabase Dashboard > SQL Editor'de çalıştırın.

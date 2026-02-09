@@ -121,7 +121,8 @@ export const AuthProvider = ({ children }) => {
           user, profile, session, loading, initialized,
           isAuthenticated: !!user,
           logoutLoading, logout,
-          refreshProfile: () => user?.id && loadProfile(user.id)
+          refreshProfile: () => user?.id && loadProfile(user.id),
+          setProfile
      }
 
      return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

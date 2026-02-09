@@ -77,6 +77,7 @@ const QuranDetail = () => {
                                    whileHover={{ scale: 1.01 }}
                                    onClick={() => navigate('/categories/reader', {
                                         state: {
+                                             id: 'surah-' + surah.id,
                                              title: surah.name + ' Suresi',
                                              subtitle: 'Kur\'an-ı Kerim',
                                              content: 'Rahman ve Rahim olan Allah\'ın adıyla. (Sure içeriği buraya gelecek...)',

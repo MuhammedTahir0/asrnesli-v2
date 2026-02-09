@@ -46,6 +46,7 @@ const HajjDetail = () => {
                                    transition={{ delay: idx * 0.1 }}
                                    onClick={() => navigate('/categories/reader', {
                                         state: {
+                                             id: 'hajj-' + idx,
                                              title: step.title,
                                              subtitle: 'Hac & Umre Rehberi',
                                              content: step.desc + ' Bu aşama, kutsal yolculuğun en önemli rüknlerinden biridir. Sabır, huşu ve teslimiyetle yerine getirilmesi tavsiye edilir. Gerekli dualar ve hazırlıklar hakkında detaylı bilgi için resmi rehberleri takip ediniz.',

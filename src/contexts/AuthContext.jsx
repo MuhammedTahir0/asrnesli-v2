@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { getProfile, upsertProfile, signOut as signOutService } from '../services/authService'
+import { syncService } from '../services/syncService'
 
 const AuthContext = createContext({})
 
@@ -77,8 +78,12 @@ export const AuthProvider = ({ children }) => {
                          setSession(s)
                          setUser(s.user)
                          await loadProfile(s.user.id, s.user)
+
+                         // Offline kuyruğu işle
+                         syncService.processQueue(s.user.id)
                     }
                } finally {
+
                     if (mounted) {
                          setLoading(false)
                          setInitialized(true)

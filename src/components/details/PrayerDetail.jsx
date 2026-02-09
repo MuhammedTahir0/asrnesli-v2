@@ -42,6 +42,7 @@ const PrayerDetail = () => {
                               key={idx}
                               onClick={() => navigate('/categories/reader', {
                                    state: {
+                                        id: 'prayer-' + idx,
                                         title: item.title,
                                         subtitle: 'Dualar ve Zikirler',
                                         content: 'Allahümme entesselâmü ve minkesselâm. Tebârekte yâ zel-celâli vel-ikrâm. (Allah’ım! Sen selamsın, selamet sendendir. Ey celal ve ikram sahibi! Sen ne yücesin.)',

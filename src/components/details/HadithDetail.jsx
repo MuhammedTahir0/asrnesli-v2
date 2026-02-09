@@ -91,6 +91,7 @@ const HadithDetail = () => {
                               transition={{ delay: idx * 0.1 }}
                               onClick={() => navigate('/categories/reader', {
                                    state: {
+                                        id: 'hadith-' + item.id,
                                         title: item.name,
                                         subtitle: 'Hadis Koleksiyonu',
                                         content: 'Ameller ancak niyetlere göredir. Herkesin niyet ettiği ne ise eline geçecek olan ancak odur...',

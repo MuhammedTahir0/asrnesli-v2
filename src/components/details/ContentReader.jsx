@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { motion, useScroll, useSpring } from 'framer-motion'
+import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../../contexts/AuthContext'
+import { toggleFavorite, isFavorite } from '../../services/favoriteService'
+import { toast } from 'react-hot-toast'
 
 const ContentReader = () => {
      const navigate = useNavigate()
      const location = useLocation()
+     const { user } = useAuth()
      const { scrollYProgress } = useScroll()
      const scaleX = useSpring(scrollYProgress, {
           stiffness: 100,
@@ -13,12 +17,64 @@ const ContentReader = () => {
      })
 
      const [fontSize, setFontSize] = useState(18)
-     const { title, subtitle, content, arabic, source } = location.state || {
+     const [isSaved, setIsSaved] = useState(false)
+     const [saveLoading, setSaveLoading] = useState(false)
+
+     const { id, title, subtitle, content, arabic, source } = location.state || {
+          id: null,
           title: 'İçerik Başlığı',
           subtitle: 'Kategori',
           content: 'Lütfen bir içerik seçiniz.',
           arabic: '',
           source: ''
+     }
+
+     // Favori durumunu kontrol et
+     useEffect(() => {
+          const checkFavorite = async () => {
+               if (user && id) {
+                    const favorited = await isFavorite(user.id, id, subtitle)
+                    setIsSaved(favorited)
+               }
+          }
+          checkFavorite()
+     }, [user, id, subtitle])
+
+     const handleSave = async () => {
+          if (!user) {
+               toast.error('İçeriği kaydetmek için giriş yapmalısınız.')
+               return
+          }
+
+          if (!id) {
+               toast.error('Bu içerik şu an kaydedilemiyor.')
+               return
+          }
+
+          setSaveLoading(true)
+          const { action, error } = await toggleFavorite(user.id, {
+               content_id: id,
+               content_type: subtitle,
+               meta_data: { title, arabic, source, content }
+          })
+          setSaveLoading(false)
+
+          if (error) {
+               toast.error('Bir hata oluştu.')
+          } else {
+               setIsSaved(action === 'added')
+               toast.success(action === 'added' ? 'Favorilerinize eklendi.' : 'Favorilerinizden çıkarıldı.')
+          }
+     }
+
+     const handleShare = () => {
+          navigate('/share', {
+               state: {
+                    text: content,
+                    source: `${title}${source ? ' — ' + source : ''}`,
+                    arabic: arabic
+               }
+          })
      }
 
      return (
@@ -110,14 +166,30 @@ const ContentReader = () => {
                     {/* Footer Actions */}
                     <div className="pt-12 pb-12 flex items-center justify-between border-t border-gray-100 dark:border-white/5">
                          <div className="flex gap-4">
-                              <button className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 text-primary-dark transition-all hover:bg-black/5">
-                                   <span className="material-symbols-outlined text-xl">share</span>
-                                   <span className="text-xs font-bold uppercase tracking-widest">Paylaş</span>
+                              <button
+                                   onClick={handleShare}
+                                   className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-white dark:bg-white/10 border border-gray-200 dark:border-white/20 text-primary dark:text-white transition-all hover:bg-black/5 active:scale-95 shadow-sm"
+                              >
+                                   <span className="material-symbols-outlined text-xl">ios_share</span>
+                                   <span className="text-xs font-black uppercase tracking-[0.1em]">Stüdyoda Paylaş</span>
                               </button>
                          </div>
-                         <button className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-accent-gold text-white font-bold transition-all shadow-lg shadow-accent-gold/20 hover:scale-105 active:scale-95">
-                              <span className="material-symbols-outlined text-xl">bookmark</span>
-                              <span className="text-xs uppercase tracking-widest">Kaydet</span>
+                         <button
+                              onClick={handleSave}
+                              disabled={saveLoading}
+                              className={`flex items-center gap-2 px-6 py-3 rounded-2xl transition-all shadow-lg font-bold hover:scale-105 active:scale-95 disabled:opacity-50 ${isSaved
+                                   ? 'bg-white dark:bg-white/10 text-accent-gold border border-accent-gold/30 shadow-none'
+                                   : 'bg-accent-gold text-white shadow-accent-gold/20'
+                                   }`}
+                         >
+                              {saveLoading ? (
+                                   <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              ) : (
+                                   <span className={`material-symbols-outlined text-xl ${isSaved ? 'fill-1' : ''}`}>
+                                        {isSaved ? 'bookmark_added' : 'bookmark'}
+                                   </span>
+                              )}
+                              <span className="text-xs uppercase tracking-widest">{isSaved ? 'Kaydedildi' : 'Kaydet'}</span>
                          </button>
                     </div>
                </main>

@@ -62,6 +62,7 @@ const FiqhDetail = () => {
                                    transition={{ delay: idx * 0.05 }}
                                    onClick={() => navigate('/categories/reader', {
                                         state: {
+                                             id: 'fiqh-' + idx,
                                              title: item.name,
                                              subtitle: 'İlmihal',
                                              content: 'Namaz, lügatte dua etmek, hayır duada bulunmak demektir. Şeriatta ise, Allahu Teâlâ ya ibadet niyetiyle yapılan, başlangıcı iftitah tekbiri, sonu ise selam olan, belli rükünleri ve şartları bulunan özel bir ibadettir...',

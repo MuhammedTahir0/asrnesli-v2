@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { getPrayerTimes, calculateNextPrayer, getCityName } from '../../services/prayerTimes'
+import { notificationService } from '../../services/notificationService'
 
 const PrayerHero = () => {
      const [nextPrayer, setNextPrayer] = useState(null)
@@ -39,8 +40,18 @@ const PrayerHero = () => {
                                         timeStr = `${m}dk`
                                    }
                                    setTimeLeft(timeStr)
+
+                                   // Bildirim Mantığı: 15. dakikada bir kez bildirim gönder
+                                   if (totalMinutes === 15 && diff > 0) {
+                                        notificationService.sendNotification(
+                                             `${next.name} Vaktine Az Kaldı`,
+                                             `${next.name} vaktine 15 dakika kaldı. Hazırlık yapmayı unutmayın.`
+                                        );
+                                   }
+
                                    setIsSoon(totalMinutes < 15)
                               } else {
+
                                    init();
                               }
                          }

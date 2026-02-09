@@ -54,7 +54,8 @@ const ShareStudio = () => {
                setContent(prev => ({
                     ...prev,
                     text: location.state.text || prev.text,
-                    source: location.state.source || prev.source
+                    source: location.state.source || prev.source,
+                    arabic: location.state.arabic || ''
                }))
           }
      }, [location.state])
@@ -278,6 +279,13 @@ const ShareStudio = () => {
 
                               {/* Content */}
                               <div className={`relative z-20 w-full flex flex-col items-center text-${textAlign}`}>
+                                   {content.arabic && (
+                                        <p className="arabic-font text-3xl md:text-5xl leading-relaxed mb-4 text-center px-4"
+                                             style={{ textAlign }}
+                                        >
+                                             {content.arabic}
+                                        </p>
+                                   )}
                                    <p className={`${currentTemplate.text} ${currentFontSize?.class || ''}`}
                                         style={{ textAlign }}
                                    >
@@ -307,9 +315,9 @@ const ShareStudio = () => {
                               {/* Watermark */}
                               {watermark.enabled && (
                                    <div className={`absolute z-20 opacity-60 ${watermark.position === 'bottom-center' ? 'bottom-4 left-1/2 -translate-x-1/2' :
-                                             watermark.position === 'bottom-left' ? 'bottom-4 left-4' :
-                                                  watermark.position === 'bottom-right' ? 'bottom-4 right-4' :
-                                                       watermark.position === 'top-left' ? 'top-4 left-4' : 'top-4 right-4'
+                                        watermark.position === 'bottom-left' ? 'bottom-4 left-4' :
+                                             watermark.position === 'bottom-right' ? 'bottom-4 right-4' :
+                                                  watermark.position === 'top-left' ? 'top-4 left-4' : 'top-4 right-4'
                                         }`}>
                                         <span className="text-[10px] uppercase tracking-[0.2em] font-bold">{watermark.text}</span>
                                    </div>
@@ -328,8 +336,8 @@ const ShareStudio = () => {
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id)}
                                         className={`flex-shrink-0 px-4 py-2.5 flex flex-col items-center gap-0.5 transition-colors ${activeTab === tab.id
-                                                  ? 'text-accent-green dark:text-primary border-b-2 border-accent-green dark:border-primary'
-                                                  : 'text-text-secondary'
+                                             ? 'text-accent-green dark:text-primary border-b-2 border-accent-green dark:border-primary'
+                                             : 'text-text-secondary'
                                              }`}
                                    >
                                         <span className="material-symbols-outlined text-lg">{tab.icon}</span>
@@ -355,8 +363,8 @@ const ShareStudio = () => {
                                                        key={cat.id}
                                                        onClick={() => setTemplateFilter(cat.id)}
                                                        className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${templateFilter === cat.id
-                                                                 ? 'bg-accent-green text-white'
-                                                                 : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'
+                                                            ? 'bg-accent-green text-white'
+                                                            : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'
                                                             }`}
                                                   >
                                                        {cat.name}
@@ -394,8 +402,8 @@ const ShareStudio = () => {
                                                        key={size.id}
                                                        onClick={() => setSelectedSize(size.id)}
                                                        className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${selectedSize === size.id
-                                                                 ? 'bg-accent-green/10 ring-2 ring-accent-green'
-                                                                 : 'bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10'
+                                                            ? 'bg-accent-green/10 ring-2 ring-accent-green'
+                                                            : 'bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10'
                                                             }`}
                                                   >
                                                        <div
@@ -425,8 +433,8 @@ const ShareStudio = () => {
                                                             key={font.id}
                                                             onClick={() => setSelectedFont(font.id)}
                                                             className={`flex-shrink-0 px-3 py-2 rounded-lg text-sm transition-all ${selectedFont === font.id
-                                                                      ? 'bg-accent-green text-white'
-                                                                      : 'bg-gray-100 dark:bg-white/10 dark:text-white'
+                                                                 ? 'bg-accent-green text-white'
+                                                                 : 'bg-gray-100 dark:bg-white/10 dark:text-white'
                                                                  }`}
                                                             style={{ fontFamily: font.family }}
                                                        >
@@ -444,8 +452,8 @@ const ShareStudio = () => {
                                                             key={size.id}
                                                             onClick={() => setFontSize(size.id)}
                                                             className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${fontSize === size.id
-                                                                      ? 'bg-accent-green text-white'
-                                                                      : 'bg-gray-100 dark:bg-white/10 dark:text-white'
+                                                                 ? 'bg-accent-green text-white'
+                                                                 : 'bg-gray-100 dark:bg-white/10 dark:text-white'
                                                                  }`}
                                                        >
                                                             {size.name}
@@ -462,8 +470,8 @@ const ShareStudio = () => {
                                                             key={align.id}
                                                             onClick={() => setTextAlign(align.id)}
                                                             className={`flex-1 py-2 rounded-lg flex items-center justify-center transition-all ${textAlign === align.id
-                                                                      ? 'bg-accent-green text-white'
-                                                                      : 'bg-gray-100 dark:bg-white/10 dark:text-white'
+                                                                 ? 'bg-accent-green text-white'
+                                                                 : 'bg-gray-100 dark:bg-white/10 dark:text-white'
                                                                  }`}
                                                        >
                                                             <span className="material-symbols-outlined text-lg">{align.icon}</span>
@@ -519,8 +527,8 @@ const ShareStudio = () => {
                                                        key={cat.id}
                                                        onClick={() => setBgFilter(cat.id)}
                                                        className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${bgFilter === cat.id
-                                                                 ? 'bg-accent-green text-white'
-                                                                 : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'
+                                                            ? 'bg-accent-green text-white'
+                                                            : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'
                                                             }`}
                                                   >
                                                        {cat.name}
@@ -571,8 +579,8 @@ const ShareStudio = () => {
                                                        key={cat.id}
                                                        onClick={() => setStickerFilter(cat.id)}
                                                        className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${stickerFilter === cat.id
-                                                                 ? 'bg-accent-green text-white'
-                                                                 : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'
+                                                            ? 'bg-accent-green text-white'
+                                                            : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'
                                                             }`}
                                                   >
                                                        {cat.name}
@@ -633,8 +641,8 @@ const ShareStudio = () => {
                                                             key={pos}
                                                             onClick={() => setWatermark(prev => ({ ...prev, position: pos }))}
                                                             className={`py-2 rounded-lg text-[10px] font-bold transition-all ${watermark.position === pos
-                                                                      ? 'bg-accent-green text-white'
-                                                                      : 'bg-gray-100 dark:bg-white/10 dark:text-white'
+                                                                 ? 'bg-accent-green text-white'
+                                                                 : 'bg-gray-100 dark:bg-white/10 dark:text-white'
                                                                  }`}
                                                        >
                                                             {pos.replace('-', ' ').replace('top', 'Üst').replace('bottom', 'Alt').replace('left', 'Sol').replace('right', 'Sağ').replace('center', 'Orta')}

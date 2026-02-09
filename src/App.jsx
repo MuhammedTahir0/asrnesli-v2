@@ -1,5 +1,6 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './contexts/AuthContext'
 import AuthGuard from './components/auth/AuthGuard'
 import Layout from './components/layout/Layout'
@@ -23,11 +24,27 @@ import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import Profile from './pages/Profile'
+import Favorites from './pages/Favorites'
 
 function App() {
      return (
           <AuthProvider>
                <Router>
+                    <Toaster
+                         position="top-center"
+                         toastOptions={{
+                              duration: 3000,
+                              style: {
+                                   background: '#1a1c1a',
+                                   color: '#fff',
+                                   border: '1px solid rgba(197, 160, 89, 0.2)',
+                                   fontSize: '14px',
+                                   padding: '12px 24px',
+                                   borderRadius: '16px',
+                                   fontFamily: 'Outfit, sans-serif'
+                              },
+                         }}
+                    />
                     <Routes>
                          {/* Auth Sayfaları - Layout olmadan, giriş yapmamış kullanıcılar için */}
                          <Route path="/login" element={
@@ -70,6 +87,7 @@ function App() {
                                              <Route path="/categories/hajj" element={<HajjDetail />} />
                                              <Route path="/categories/reader" element={<ContentReader />} />
                                              <Route path="/profile" element={<Profile />} />
+                                             <Route path="/favorites" element={<Favorites />} />
                                         </Routes>
                                    </Layout>
                               </AuthGuard>

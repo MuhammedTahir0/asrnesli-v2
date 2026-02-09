@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { updateProfile, uploadAvatar } from '../services/authService'
+import { syncService } from '../services/syncService'
 
 const Profile = () => {
      const navigate = useNavigate()
@@ -67,6 +68,12 @@ const Profile = () => {
           }
 
           await refreshProfile()
+
+          // Senkronize et
+          if (user?.id) {
+               await syncService.syncPreferences(user.id, formData)
+          }
+
           setIsEditing(false)
           setMessage({ type: 'success', text: 'Profil güncellendi' })
      }
@@ -261,6 +268,30 @@ const Profile = () => {
                                    </p>
                               </div>
                          </div>
+                    </motion.div>
+
+                    {/* Hızlı Menü */}
+                    <motion.div
+                         className="space-y-3"
+                         initial={{ opacity: 0, y: 20 }}
+                         animate={{ opacity: 1, y: 0 }}
+                         transition={{ delay: 0.2 }}
+                    >
+                         <button
+                              onClick={() => navigate('/favorites')}
+                              className="w-full p-4 rounded-2xl bg-[#C5A059]/10 border border-[#C5A059]/20 flex items-center justify-between group hover:bg-[#C5A059]/20 transition-all"
+                         >
+                              <div className="flex items-center gap-4">
+                                   <div className="size-10 rounded-xl bg-[#C5A059] flex items-center justify-center text-white shadow-lg shadow-[#C5A059]/30">
+                                        <span className="material-symbols-outlined">bookmark</span>
+                                   </div>
+                                   <div className="text-left">
+                                        <h4 className="font-bold text-white">Favorilerim</h4>
+                                        <p className="text-xs text-white/50">Kaydettiğiniz tüm içerikler</p>
+                                   </div>
+                              </div>
+                              <span className="material-symbols-outlined text-[#C5A059] group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
+                         </button>
                     </motion.div>
 
                     {/* Çıkış Yap Butonu */}

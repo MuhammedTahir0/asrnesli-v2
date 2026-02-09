@@ -3,6 +3,8 @@ import { motion } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import PrayerHero from './home/PrayerHero'
+import { offlineStorage } from '../services/offlineStorage'
+import { notificationService } from '../services/notificationService'
 
 const Home = () => {
      const navigate = useNavigate()
@@ -89,14 +91,34 @@ const Home = () => {
                     }
                } catch (err) {
                     console.error('❌ Veri çekme genel hata:', err)
-                    setError('İçerik yüklenirken bir sorun oluştu. Lütfen bağlantınızı kontrol edin.')
+
+                    // Offline fallback
+                    const cachedData = offlineStorage.getDailyContent()
+                    if (cachedData) {
+                         console.log('📦 İnternet yok, önbellekteki veriler yükleniyor...')
+                         setData(cachedData)
+                         setError(null)
+                    } else {
+                         setError('İçerik yüklenirken bir sorun oluştu. Lütfen bağlantınızı kontrol edin.')
+                    }
                } finally {
                     setLoading(false)
                }
           }
 
           fetchDailyContent()
+
+          // Bildirim izni iste
+          notificationService.requestPermission()
      }, [])
+
+     // Veri değiştiğinde (yüklendiğinde) offline storage'a kaydet
+     useEffect(() => {
+          if (data.verse || data.hadith) {
+               offlineStorage.saveDailyContent(data)
+          }
+     }, [data])
+
 
      if (loading) {
           return (
@@ -268,6 +290,20 @@ const Home = () => {
                               <p className="text-xs text-white/60 leading-relaxed max-w-[90%] border-t border-white/10 pt-4 mt-2">
                                    {data.nameOfAllah.description}
                               </p>
+
+                              <div className="flex justify-center pt-2 w-full border-t border-white/5">
+                                   <Link
+                                        to="/share"
+                                        state={{
+                                             text: data.nameOfAllah.meaning + ' — ' + data.nameOfAllah.description,
+                                             source: 'Esma-ül Hüsna: Ya ' + data.nameOfAllah.name_tr,
+                                             arabic: data.nameOfAllah.name_ar
+                                        }}
+                                        className="size-10 rounded-full border border-[#C5A059]/30 flex items-center justify-center text-[#C5A059] hover:bg-[#C5A059] hover:text-white transition-all"
+                                   >
+                                        <span className="material-symbols-outlined text-[20px]">share</span>
+                                   </Link>
+                              </div>
                          </div>
                     </motion.article>
                )}

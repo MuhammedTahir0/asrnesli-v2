@@ -8,6 +8,7 @@ const PrayerHero = () => {
      const [timeLeft, setTimeLeft] = useState('')
      const [location, setLocation] = useState('')
      const [isSoon, setIsSoon] = useState(false)
+     const lastNotifiedRef = React.useRef({ prayer: null, minute: null })
 
      useEffect(() => {
           let timer;
@@ -42,11 +43,12 @@ const PrayerHero = () => {
                                    setTimeLeft(timeStr)
 
                                    // Bildirim Mantığı: 15. dakikada bir kez bildirim gönder
-                                   if (totalMinutes === 15 && diff > 0) {
+                                   if (totalMinutes === 15 && (lastNotifiedRef.current.prayer !== next.name || lastNotifiedRef.current.minute !== totalMinutes)) {
                                         notificationService.sendNotification(
                                              `${next.name} Vaktine Az Kaldı`,
                                              `${next.name} vaktine 15 dakika kaldı. Hazırlık yapmayı unutmayın.`
                                         );
+                                        lastNotifiedRef.current = { prayer: next.name, minute: totalMinutes };
                                    }
 
                                    setIsSoon(totalMinutes < 15)

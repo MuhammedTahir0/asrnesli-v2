@@ -5,7 +5,7 @@ import { toPng, toBlob } from 'html-to-image'
 import { toast } from 'react-hot-toast'
 import { useAuth } from '../contexts/AuthContext'
 import { consumeToken, grantToken } from '../services/authService'
-import { FaWhatsapp, FaInstagram, FaTelegram, FaTiktok, FaTwitter, FaFacebook, FaYoutube } from 'react-icons/fa'
+import { FaWhatsapp, FaInstagram, FaTelegram, FaTiktok, FaTwitter, FaFacebook, FaYoutube, FaEye } from 'react-icons/fa'
 
 // Data imports
 import { templates, templateCategories } from '../data/templates'
@@ -14,12 +14,16 @@ import { colorPalettes, gradients } from '../data/colors'
 import { backgrounds, backgroundCategories } from '../data/backgrounds'
 import { platformSizes, platformGroups } from '../data/sizes'
 import { stickers, stickerCategories } from '../data/stickers'
+import PreviewModal from './shared/PreviewModal'
+import AdReward from '../pages/AdReward'
 
 const ShareStudio = () => {
      const location = useLocation()
      const navigate = useNavigate()
      const { user, profile, setProfile } = useAuth()
      const [isProcessing, setIsProcessing] = useState(false)
+     const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+     const [previewImage, setPreviewImage] = useState(null)
      const [adRewardLoading, setAdRewardLoading] = useState(false)
      const [showAdPanel, setShowAdPanel] = useState(false)
      const cardRef = useRef(null)
@@ -418,11 +422,16 @@ const ShareStudio = () => {
                          }
                          break
 
+                    case 'download':
+                         downloadImage(URL.createObjectURL(blob))
+                         toast.success('Görsel başarıyla indirildi')
+                         break
+
                     default:
                          if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
                               await navigator.share(shareData)
                          } else {
-                              handleDownload()
+                              downloadImage(URL.createObjectURL(blob))
                          }
                }
 
@@ -431,6 +440,28 @@ const ShareStudio = () => {
                toast.error('Paylaşım sırasında bir hata oluştu')
           } finally {
                setIsProcessing(false)
+          }
+     }
+
+     const handleOpenPreview = async () => {
+          setIsPreviewOpen(true)
+          setPreviewImage(null)
+
+          try {
+               // Font'un yüklenmesini bekle
+               if (currentFont && currentFont.family !== 'inherit') {
+                    await document.fonts.ready
+               }
+
+               // Bekleme süresi render için
+               await new Promise(resolve => setTimeout(resolve, 300))
+
+               const dataUrl = await generateImage()
+               setPreviewImage(dataUrl)
+          } catch (err) {
+               console.error('Preview error:', err)
+               toast.error('Önizleme oluşturulamadı')
+               setIsPreviewOpen(false)
           }
      }
 
@@ -563,7 +594,19 @@ const ShareStudio = () => {
 
                {/* Canvas Area */}
                <div className="flex-1 relative bg-gray-100 dark:bg-[#121212] flex items-center justify-center p-4 overflow-hidden">
-                    <div className="relative z-10 shadow-2xl shadow-black/30 rounded-lg overflow-hidden">
+                    <motion.div
+                         onClick={handleOpenPreview}
+                         whileHover={{ scale: 1.02 }}
+                         whileTap={{ scale: 0.98 }}
+                         className="relative z-10 shadow-2xl shadow-black/30 rounded-lg overflow-hidden cursor-pointer group"
+                    >
+                         {/* Hover Overlay */}
+                         <div className="absolute inset-0 z-30 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3 backdrop-blur-[2px]">
+                              <div className="size-14 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white backdrop-blur-md">
+                                   <FaEye size={24} />
+                              </div>
+                              <span className="text-white text-xs font-bold uppercase tracking-[0.2em]">Önizle ve Paylaş</span>
+                         </div>
                          <div
                               ref={cardRef}
                               className={`relative flex flex-col items-center justify-center p-6 transition-all duration-300 overflow-hidden ${selectedGradient ? 'bg-gradient-to-br ' + gradients.find(g => g.id === selectedGradient)?.value : currentTemplate.container}`}
@@ -720,7 +763,7 @@ const ShareStudio = () => {
                                    </div>
                               )}
                          </div>
-                    </div>
+                    </motion.div>
                </div>
 
                {/* Controls */}
@@ -1217,6 +1260,28 @@ const ShareStudio = () => {
                          </button>
                     </div>
                </div>
+
+               {/* Premium Preview & Share Modal */}
+               <PreviewModal
+                    isOpen={isPreviewOpen}
+                    onClose={() => setIsPreviewOpen(false)}
+                    image={previewImage}
+                    onShare={handleSharePlatform}
+                    isProcessing={isProcessing}
+                    text={content.text}
+               />
+
+               {/* Ad Reward Modal */}
+               <AdReward
+                    isOpen={showAdPanel}
+                    onClose={() => setShowAdPanel(false)}
+                    onSuccess={() => {
+                         setShowAdPanel(false);
+                         // handleAdSuccess logic might be elsewhere, but usually it grants tokens
+                         grantToken(5);
+                         toast.success('5 Token kazandınız!');
+                    }}
+               />
           </div>
      )
 }

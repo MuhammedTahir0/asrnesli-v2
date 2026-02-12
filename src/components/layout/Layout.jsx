@@ -96,10 +96,10 @@ const Layout = ({ children }) => {
                                    animate={{ x: 0 }}
                                    exit={{ x: '-100%' }}
                                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                                   className="absolute top-0 left-0 h-full w-[80%] bg-surface-light dark:bg-[#1a1c1a] z-[70] shadow-2xl border-r border-accent-gold/10 flex flex-col"
+                                   className="absolute top-0 left-0 h-full w-[80%] bg-surface-light dark:bg-background-dark z-[70] shadow-2xl border-r border-accent-gold/10 flex flex-col"
                               >
                                    {/* Sidebar Header */}
-                                   <div className="p-8 bg-accent-green dark:bg-[#2d3a2d] text-white overflow-hidden relative">
+                                   <div className="p-8 bg-accent-green dark:bg-primary text-white overflow-hidden relative">
                                         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')]"></div>
                                         <div className="relative z-10 flex flex-col gap-4">
                                              <div className="flex justify-between items-start">
@@ -191,7 +191,7 @@ const Layout = ({ children }) => {
                </main>
 
                {/* Alt Navigasyon */}
-               <nav className="fixed bottom-0 w-full max-w-md bg-surface-light/95 dark:bg-[#171b17]/95 backdrop-blur-xl border-t border-accent-gold/20 pb-safe pt-2 z-50">
+               <nav className="fixed bottom-0 w-full max-w-md bg-surface-light/95 dark:bg-background-dark/95 backdrop-blur-xl border-t border-accent-gold/20 pb-safe pt-2 z-50">
                     <div className="flex items-center justify-around px-2 pb-4">
                          <Link to="/" className={`flex flex-col items-center gap-1 p-2 group ${location.pathname === '/' ? 'text-accent-green dark:text-primary' : 'text-text-secondary'}`}>
                               <div className="relative">

@@ -526,7 +526,7 @@ const ShareStudio = () => {
      return (
           <div className="flex flex-col h-screen bg-background-light dark:bg-background-dark font-display overflow-hidden">
                {/* Header */}
-               <header className="shrink-0 flex items-center justify-between p-3 border-b border-black/5 dark:border-white/5 z-20 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md">
+               <header className="shrink-0 flex items-center justify-between p-3 border-b border-black/5 dark:border-accent-gold/10 z-20 bg-surface-light/90 dark:bg-background-dark/90 backdrop-blur-md">
                     <button
                          onClick={() => navigate(-1)}
                          className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
@@ -593,7 +593,7 @@ const ShareStudio = () => {
                )}
 
                {/* Canvas Area */}
-               <div className="flex-1 relative bg-gray-100 dark:bg-[#121212] flex items-center justify-center p-4 overflow-hidden">
+               <div className="flex-1 relative bg-background-light dark:bg-background-dark flex items-center justify-center p-4 overflow-hidden">
                     <motion.div
                          onClick={handleOpenPreview}
                          whileHover={{ scale: 1.02 }}
@@ -767,14 +767,14 @@ const ShareStudio = () => {
                </div>
 
                {/* Controls */}
-               <div className="shrink-0 bg-surface-light dark:bg-[#1a1c1a] border-t border-black/5 dark:border-white/5 pb-safe z-30">
+               <div className="shrink-0 bg-surface-light dark:bg-surface-dark border-t border-black/5 dark:border-white/5 pb-safe z-30">
                     {/* Token Bar */}
                     <div className="px-3 pt-3">
-                         <div className="relative overflow-hidden rounded-2xl border border-[#C5A059]/25 bg-gradient-to-br from-[#13110b] via-[#1a1c1a] to-[#0f0f0d] text-white p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                         <div className="relative overflow-hidden rounded-2xl border border-accent-gold/25 bg-surface-dark text-white p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                               <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')]" />
                               <div className="relative flex items-center justify-between gap-4">
                                    <div>
-                                        <p className="text-[10px] uppercase tracking-[0.35em] text-[#C5A059]/80">Token Durumu</p>
+                                        <p className="text-[10px] uppercase tracking-[0.35em] text-accent-gold/80">Token Durumu</p>
                                         <p className="text-lg font-semibold">
                                              {isProfileReady ? `${tokens} token kaldı` : 'Token yükleniyor...'}
                                         </p>
@@ -782,11 +782,11 @@ const ShareStudio = () => {
                                    </div>
                               </div>
                               {isProfileReady && tokens <= 0 && (
-                                   <div className="relative mt-3 rounded-xl border border-[#C5A059]/20 bg-black/30 p-3">
+                                   <div className="relative mt-3 rounded-xl border border-accent-gold/20 bg-black/30 p-3">
                                         <p className="text-[11px] text-white/70 mb-2">Token bitti. Reklam izleyerek devam edebilirsiniz.</p>
                                         <button
                                              onClick={() => setShowAdPanel(prev => !prev)}
-                                             className="w-full py-2.5 rounded-lg bg-gradient-to-r from-[#C5A059] to-[#E7D3A1] text-[#1a1c1a] text-xs font-bold uppercase tracking-widest shadow-lg shadow-[#C5A059]/20"
+                                             className="w-full py-2.5 rounded-lg bg-gradient-to-r from-accent-gold to-accent-gold-light text-background-dark text-xs font-bold uppercase tracking-widest shadow-lg shadow-accent-gold/20"
                                         >
                                              Reklam İzle ve Token Kazan
                                         </button>
@@ -807,7 +807,7 @@ const ShareStudio = () => {
                                                   <button
                                                        onClick={handleAdReward}
                                                        disabled={adRewardLoading}
-                                                       className="w-full py-2 rounded-lg border border-[#C5A059]/40 text-[#C5A059] text-xs font-bold uppercase tracking-widest disabled:opacity-60"
+                                                       className="w-full py-2 rounded-lg border border-accent-gold/40 text-accent-gold text-xs font-bold uppercase tracking-widest disabled:opacity-60 hover:bg-accent-gold/5 transition-colors"
                                                   >
                                                        {adRewardLoading ? 'Kontrol ediliyor...' : '+1 Token Kazan'}
                                                   </button>
@@ -1200,7 +1200,7 @@ const ShareStudio = () => {
                     {/* Action Buttons */}
                     <div className="flex flex-col gap-3 p-3 border-t border-black/5 dark:border-white/5">
                          {!canSpendToken && (
-                              <div className="absolute -top-7 left-1/2 -translate-x-1/2 text-[10px] text-[#C5A059] bg-black/70 border border-[#C5A059]/30 px-2 py-1 rounded-full whitespace-nowrap z-50">
+                              <div className="absolute -top-7 left-1/2 -translate-x-1/2 text-[10px] text-accent-gold bg-black/80 border border-accent-gold/30 px-3 py-1.5 rounded-full whitespace-nowrap z-50 backdrop-blur-md shadow-lg">
                                    Token bitti. Reklam izleyerek devam edin.
                               </div>
                          )}
@@ -1253,7 +1253,7 @@ const ShareStudio = () => {
                          <button
                               onClick={handleDownload}
                               disabled={isProcessing || !canSpendToken}
-                              className="w-full py-3 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
+                              className="w-full py-3 rounded-xl bg-surface-subtle dark:bg-white/10 text-text-primary dark:text-white font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
                          >
                               <span className="material-symbols-outlined text-lg">download</span>
                               Cihaza Kaydet

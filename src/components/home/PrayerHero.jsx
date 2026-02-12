@@ -115,14 +115,14 @@ const PrayerHero = () => {
                animate={{ opacity: 1, y: 0 }}
                className="flex flex-col items-center justify-center py-4"
           >
-               <div className="flex items-center gap-2 mb-3 bg-accent-green/10 dark:bg-accent-green/20 px-4 py-1.5 rounded-full border border-accent-green/20">
+               <div className="flex items-center gap-2 mb-3 bg-accent-green/10 dark:bg-primary/20 px-4 py-1.5 rounded-full border border-accent-green/20">
                     <span className="material-symbols-outlined text-[18px] text-accent-gold !leading-none">location_on</span>
-                    <span className="text-xs font-bold text-accent-green dark:text-emerald-400 uppercase tracking-widest leading-none pt-0.5">{location || 'Konum Belirleniyor...'}</span>
+                    <span className="text-xs font-bold text-accent-green dark:text-primary uppercase tracking-widest leading-none pt-0.5">{location || 'Konum Belirleniyor...'}</span>
                </div>
 
                <div className="flex flex-col items-center gap-1 mb-2">
                     <span className="text-[11px] font-black uppercase tracking-[0.15em] text-text-secondary dark:text-gray-400">
-                         Sıradaki Vakit: <span className="text-accent-green dark:text-emerald-500">{nextPrayer.name}</span>
+                         Sıradaki Vakit: <span className="text-accent-green dark:text-primary">{nextPrayer.name}</span>
                     </span>
                     <div className="text-6xl font-black font-display tracking-tighter text-text-primary dark:text-white">
                          {timeLeft}

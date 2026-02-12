@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { grantToken, trackAdEvent } from '../services/authService';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
-import { useEffect as useImpression } from 'react';
+
 
 const AdReward = () => {
      const navigate = useNavigate();

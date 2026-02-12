@@ -90,17 +90,17 @@ const Profile = () => {
      }
 
      return (
-          <div className="min-h-screen bg-gradient-to-b from-[#0a1a0a] via-[#0f2a0f] to-[#0a1a0a] pb-20">
+          <div className="min-h-screen bg-background-light dark:bg-background-dark pb-20">
                {/* Header */}
-               <header className="sticky top-0 z-50 bg-[#0a1a0a]/90 backdrop-blur-xl border-b border-[#C5A059]/10">
+               <header className="sticky top-0 z-50 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-xl border-b border-black/5 dark:border-accent-gold/10">
                     <div className="flex items-center justify-between p-4">
                          <button
                               onClick={() => navigate(-1)}
-                              className="p-2 rounded-full hover:bg-white/5 transition-colors"
+                              className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                          >
-                              <span className="material-symbols-outlined text-white">arrow_back</span>
+                              <span className="material-symbols-outlined text-primary dark:text-white">arrow_back</span>
                          </button>
-                         <h1 className="text-lg font-bold text-white">Profilim</h1>
+                         <h1 className="text-lg font-bold text-primary dark:text-white">Profilim</h1>
                          <button
                               onClick={handleLogout}
                               className="p-2 rounded-full hover:bg-red-500/10 text-red-400 transition-colors"
@@ -118,7 +118,7 @@ const Profile = () => {
                          animate={{ opacity: 1, y: 0 }}
                     >
                          <div className="relative">
-                              <div className="size-28 rounded-full bg-gradient-to-br from-[#2D5A27] to-[#1a3a1a] flex items-center justify-center border-4 border-[#C5A059]/30 overflow-hidden">
+                              <div className="size-28 rounded-full bg-surface-light dark:bg-surface-dark flex items-center justify-center border-4 border-accent-gold/30 overflow-hidden shadow-lg shadow-accent-gold/20">
                                    {profile?.avatar_url ? (
                                         <img
                                              src={profile.avatar_url}
@@ -126,7 +126,7 @@ const Profile = () => {
                                              className="w-full h-full object-cover"
                                         />
                                    ) : (
-                                        <span className="text-[#C5A059] text-4xl font-bold">
+                                        <span className="text-accent-gold text-4xl font-bold">
                                              {profile?.full_name?.charAt(0) || user?.email?.charAt(0) || '?'}
                                         </span>
                                    )}
@@ -141,7 +141,7 @@ const Profile = () => {
                               {/* Avatar değiştir butonu */}
                               <button
                                    onClick={() => fileInputRef.current?.click()}
-                                   className="absolute bottom-0 right-0 size-10 rounded-full bg-[#2D5A27] border-2 border-[#0a1a0a] flex items-center justify-center hover:bg-[#3d7a37] transition-colors"
+                                   className="absolute bottom-0 right-0 size-10 rounded-full bg-primary border-2 border-white dark:border-background-dark flex items-center justify-center hover:bg-primary/90 transition-colors shadow-lg"
                               >
                                    <span className="material-symbols-outlined text-white text-lg">photo_camera</span>
                               </button>
@@ -155,30 +155,32 @@ const Profile = () => {
                               />
                          </div>
 
-                         <h2 className="mt-4 text-xl font-bold text-white">{profile?.full_name || 'İsimsiz'}</h2>
-                         <p className="text-[#C5A059]">@{profile?.username || 'kullanici'}</p>
+                         <h2 className="mt-4 text-xl font-bold text-primary dark:text-white">{profile?.full_name || 'İsimsiz'}</h2>
+                         <p className="text-accent-gold">@{profile?.username || 'kullanici'}</p>
                     </motion.div>
 
                     {/* Mesaj */}
-                    {message.text && (
-                         <motion.div
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className={`p-3 rounded-xl text-sm flex items-center gap-2 ${message.type === 'error'
-                                   ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                                   : 'bg-green-500/10 text-green-400 border border-green-500/20'
-                                   }`}
-                         >
-                              <span className="material-symbols-outlined text-lg">
-                                   {message.type === 'error' ? 'error' : 'check_circle'}
-                              </span>
-                              {message.text}
-                         </motion.div>
-                    )}
+                    {
+                         message.text && (
+                              <motion.div
+                                   initial={{ opacity: 0, y: -10 }}
+                                   animate={{ opacity: 1, y: 0 }}
+                                   className={`p-3 rounded-xl text-sm flex items-center gap-2 ${message.type === 'error'
+                                        ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                                        : 'bg-green-500/10 text-green-400 border border-green-500/20'
+                                        }`}
+                              >
+                                   <span className="material-symbols-outlined text-lg">
+                                        {message.type === 'error' ? 'error' : 'check_circle'}
+                                   </span>
+                                   {message.text}
+                              </motion.div>
+                         )
+                    }
 
                     {/* Profil Bilgileri */}
                     <motion.div
-                         className="bg-[#0f1f0f]/80 rounded-2xl border border-[#C5A059]/20 overflow-hidden"
+                         className="bg-surface-light dark:bg-surface-dark rounded-2xl border border-accent-gold/20 overflow-hidden shadow-sm"
                          initial={{ opacity: 0, y: 20 }}
                          animate={{ opacity: 1, y: 0 }}
                          transition={{ delay: 0.1 }}
@@ -204,59 +206,59 @@ const Profile = () => {
                          <div className="p-4 space-y-4">
                               {/* E-posta (değiştirilemez) */}
                               <div>
-                                   <label className="text-xs text-gray-500 uppercase tracking-wide">E-posta</label>
-                                   <p className="text-white mt-1">{user?.email}</p>
+                                   <label className="text-xs text-text-secondary dark:text-gray-400 uppercase tracking-wide font-bold">E-posta</label>
+                                   <p className="text-primary dark:text-white mt-1 font-medium">{user?.email}</p>
                               </div>
 
                               {/* Ad Soyad */}
                               <div>
-                                   <label className="text-xs text-gray-500 uppercase tracking-wide">Ad Soyad</label>
+                                   <label className="text-xs text-text-secondary dark:text-gray-400 uppercase tracking-wide font-bold">Ad Soyad</label>
                                    {isEditing ? (
                                         <input
                                              name="full_name"
                                              value={formData.full_name}
                                              onChange={handleChange}
-                                             className="w-full mt-1 bg-[#1a2a1a] border border-[#2D5A27]/30 rounded-lg px-3 py-2 text-white focus:border-[#C5A059]/50 focus:outline-none"
+                                             className="w-full mt-1 bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-primary dark:text-white focus:border-accent-gold/50 focus:outline-none focus:ring-1 focus:ring-accent-gold/50"
                                         />
                                    ) : (
-                                        <p className="text-white mt-1">{profile?.full_name || '-'}</p>
+                                        <p className="text-primary dark:text-white mt-1 font-medium">{profile?.full_name || '-'}</p>
                                    )}
                               </div>
 
                               {/* Kullanıcı Adı */}
                               <div>
-                                   <label className="text-xs text-gray-500 uppercase tracking-wide">Kullanıcı Adı</label>
+                                   <label className="text-xs text-text-secondary dark:text-gray-400 uppercase tracking-wide font-bold">Kullanıcı Adı</label>
                                    {isEditing ? (
                                         <input
                                              name="username"
                                              value={formData.username}
                                              onChange={handleChange}
-                                             className="w-full mt-1 bg-[#1a2a1a] border border-[#2D5A27]/30 rounded-lg px-3 py-2 text-white focus:border-[#C5A059]/50 focus:outline-none"
+                                             className="w-full mt-1 bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-primary dark:text-white focus:border-accent-gold/50 focus:outline-none focus:ring-1 focus:ring-accent-gold/50"
                                         />
                                    ) : (
-                                        <p className="text-white mt-1">@{profile?.username || '-'}</p>
+                                        <p className="text-primary dark:text-white mt-1 font-medium">@{profile?.username || '-'}</p>
                                    )}
                               </div>
 
                               {/* Telefon */}
                               <div>
-                                   <label className="text-xs text-gray-500 uppercase tracking-wide">Telefon</label>
+                                   <label className="text-xs text-text-secondary dark:text-gray-400 uppercase tracking-wide font-bold">Telefon</label>
                                    {isEditing ? (
                                         <input
                                              name="phone"
                                              value={formData.phone}
                                              onChange={handleChange}
-                                             className="w-full mt-1 bg-[#1a2a1a] border border-[#2D5A27]/30 rounded-lg px-3 py-2 text-white focus:border-[#C5A059]/50 focus:outline-none"
+                                             className="w-full mt-1 bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-primary dark:text-white focus:border-accent-gold/50 focus:outline-none focus:ring-1 focus:ring-accent-gold/50"
                                         />
                                    ) : (
-                                        <p className="text-white mt-1">{profile?.phone || '-'}</p>
+                                        <p className="text-primary dark:text-white mt-1 font-medium">{profile?.phone || '-'}</p>
                                    )}
                               </div>
 
                               {/* Kayıt Tarihi */}
                               <div>
-                                   <label className="text-xs text-gray-500 uppercase tracking-wide">Kayıt Tarihi</label>
-                                   <p className="text-white mt-1">
+                                   <label className="text-xs text-text-secondary dark:text-gray-400 uppercase tracking-wide font-bold">Kayıt Tarihi</label>
+                                   <p className="text-primary dark:text-white mt-1 font-medium">
                                         {(profile?.created_at || user?.created_at)
                                              ? new Date(profile?.created_at || user?.created_at).toLocaleDateString('tr-TR', {
                                                   day: 'numeric',
@@ -279,18 +281,18 @@ const Profile = () => {
                     >
                          <button
                               onClick={() => navigate('/favorites')}
-                              className="w-full p-4 rounded-2xl bg-[#C5A059]/10 border border-[#C5A059]/20 flex items-center justify-between group hover:bg-[#C5A059]/20 transition-all"
+                              className="w-full p-4 rounded-2xl bg-surface-light dark:bg-surface-dark border border-accent-gold/20 flex items-center justify-between group hover:border-accent-gold/40 hover:shadow-md transition-all"
                          >
                               <div className="flex items-center gap-4">
-                                   <div className="size-10 rounded-xl bg-[#C5A059] flex items-center justify-center text-white shadow-lg shadow-[#C5A059]/30">
+                                   <div className="size-10 rounded-xl bg-accent-gold/10 flex items-center justify-center text-accent-gold shadow-sm group-hover:bg-accent-gold group-hover:text-white transition-colors">
                                         <span className="material-symbols-outlined">bookmark</span>
                                    </div>
                                    <div className="text-left">
-                                        <h4 className="font-bold text-white">Favorilerim</h4>
-                                        <p className="text-xs text-white/50">Kaydettiğiniz tüm içerikler</p>
+                                        <h4 className="font-bold text-primary dark:text-white">Favorilerim</h4>
+                                        <p className="text-xs text-text-secondary dark:text-gray-400">Kaydettiğiniz tüm içerikler</p>
                                    </div>
                               </div>
-                              <span className="material-symbols-outlined text-[#C5A059] group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
+                              <span className="material-symbols-outlined text-accent-gold group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
                          </button>
                     </motion.div>
 
@@ -309,8 +311,8 @@ const Profile = () => {
                          )}
                          <span>{logoutLoading ? 'Çıkış yapılıyor...' : 'Çıkış Yap'}</span>
                     </motion.button>
-               </div>
-          </div>
+               </div >
+          </div >
      )
 }
 

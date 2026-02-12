@@ -51,7 +51,7 @@ const Categories = () => {
                          <motion.button
                               whileTap={{ scale: 0.9 }}
                               onClick={() => navigate(-1)}
-                              className="size-12 rounded-2xl bg-white dark:bg-white/5 shadow-soft border border-gray-100 dark:border-white/10 flex items-center justify-center text-primary"
+                              className="size-12 rounded-2xl bg-surface-light dark:bg-surface-dark shadow-soft border border-gray-100 dark:border-white/10 flex items-center justify-center text-primary dark:text-white hover:bg-accent-gold/5 transition-colors"
                          >
                               <span className="material-symbols-outlined font-light">arrow_back</span>
                          </motion.button>
@@ -68,7 +68,7 @@ const Categories = () => {
                          <input
                               type="text"
                               placeholder="Kategorilerde ara..." aria-label="Kategorilerde ara"
-                              className="block w-full p-5 pl-14 text-sm bg-white/70 dark:bg-white/5 border border-white dark:border-white/10 rounded-[2rem] placeholder-primary/40 focus:ring-4 focus:ring-accent-gold/10 focus:outline-none backdrop-blur-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] transition-all duration-500"
+                              className="block w-full p-5 pl-14 text-sm bg-surface-light/70 dark:bg-surface-dark/50 border border-white dark:border-white/10 rounded-[2rem] placeholder-primary/40 dark:placeholder-white/40 text-primary dark:text-white focus:ring-4 focus:ring-accent-gold/10 focus:outline-none backdrop-blur-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] transition-all duration-500"
                          />
                     </div>
                </header>
@@ -87,12 +87,12 @@ const Categories = () => {
                                         ease: [0.22, 1, 0.36, 1]
                                    }}
                                    onClick={() => navigate(cat.path)}
-                                   className="group relative w-full h-32 overflow-hidden rounded-[2.5rem] bg-white dark:bg-[#1f291e] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 dark:border-white/5 cursor-pointer flex items-center px-8 transition-all hover:shadow-2xl hover:border-accent-gold/20 hover:-translate-y-1 text-left"
+                                   className="group relative w-full h-32 overflow-hidden rounded-[2.5rem] bg-surface-light dark:bg-surface-dark shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 dark:border-white/5 cursor-pointer flex items-center px-8 transition-all hover:shadow-2xl hover:border-accent-gold/20 hover:-translate-y-1 text-left"
                               >
                                    {/* Card Decoration */}
                                    <div className="absolute right-0 top-0 h-full w-1/2 bg-gradient-to-l from-accent-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
 
-                                   <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-accent-green/5 dark:bg-white/5 text-accent-green group-hover:scale-110 group-hover:bg-accent-gold group-hover:text-white transition-all duration-500 shadow-sm shadow-accent-green/10 group-hover:shadow-accent-gold/30">
+                                   <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-accent-green/5 dark:bg-white/5 text-accent-green dark:text-accent-gold group-hover:scale-110 group-hover:bg-accent-gold group-hover:text-white transition-all duration-500 shadow-sm shadow-accent-green/10 group-hover:shadow-accent-gold/30">
                                         <span className="material-symbols-outlined text-3xl font-light">
                                              {cat.icon}
                                         </span>

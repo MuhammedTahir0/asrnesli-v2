@@ -21,8 +21,7 @@ Bu plan, **Asr Nesli** uygulamasının mobil kullanıcı deneyimini maksimize et
 ## 📂 Dosya Yapısı Değişiklikleri
 ```text
 src/
-├── hooks/
-│   └── useSync.js           # Senkronizasyon mantığı (syncService olarak eklendi)
+
 ├── services/
 │   ├── notificationService.js # Bildirim yönetimi
 │   ├── offlineStorage.js      # Offline veri yönetimi

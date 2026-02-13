@@ -35,6 +35,7 @@ export const fontCategories = [
 ]
 
 export const fontSizes = [
+     { id: 'auto', name: 'Otomatik', class: '' },
      { id: 'xs', name: 'Çok Küçük', class: 'text-base md:text-lg' },
      { id: 'sm', name: 'Küçük', class: 'text-lg md:text-xl' },
      { id: 'md', name: 'Orta', class: 'text-xl md:text-2xl' },

@@ -40,7 +40,7 @@ const ShareStudio = () => {
      const [template, setTemplate] = useState('nature')
      const [selectedSize, setSelectedSize] = useState('ig-story')
      const [selectedFont, setSelectedFont] = useState('default')
-     const [fontSize, setFontSize] = useState('md')
+     const [fontSize, setFontSize] = useState('auto')
      const [textAlign, setTextAlign] = useState('center')
      const [selectedPalette, setSelectedPalette] = useState(null)
      const [selectedGradient, setSelectedGradient] = useState(null)
@@ -137,6 +137,14 @@ const ShareStudio = () => {
 
 
      // Handlers
+     const getDynamicFontSize = (textLength) => {
+          if (textLength < 50) return 'text-3xl md:text-5xl leading-tight'
+          if (textLength < 100) return 'text-2xl md:text-4xl leading-snug'
+          if (textLength < 200) return 'text-xl md:text-3xl leading-relaxed'
+          if (textLength < 300) return 'text-lg md:text-2xl leading-relaxed'
+          return 'text-base md:text-xl leading-relaxed'
+     }
+
      const handleImageUpload = (e) => {
           const file = e.target.files?.[0]
           if (file) {
@@ -718,13 +726,13 @@ const ShareStudio = () => {
                               {/* Content */}
                               <div className={`relative z-20 w-full flex flex-col items-center text-${textAlign}`}>
                                    {content.arabic && (
-                                        <p className="arabic-font text-3xl md:text-5xl leading-relaxed mb-4 text-center px-4"
+                                        <p className="arabic-font text-3xl md:text-5xl leading-relaxed mb-6 text-center px-4 md:px-8 w-full"
                                              style={{ textAlign }}
                                         >
                                              {content.arabic}
                                         </p>
                                    )}
-                                   <p className={`${currentTemplate.text} ${currentFontSize?.class || ''}`}
+                                   <p className={`${currentTemplate.text} ${fontSize === 'auto' ? getDynamicFontSize(content.text.length) : (currentFontSize?.class || '')} px-8 w-full mx-auto`}
                                         style={{ textAlign }}
                                    >
                                         {content.text}
@@ -961,7 +969,7 @@ const ShareStudio = () => {
                                         {/* Font Size */}
                                         <div>
                                              <label className="text-[10px] font-bold uppercase text-gray-500 mb-2 block">Boyut</label>
-                                             <div className="flex gap-2">
+                                             <div className="grid grid-cols-3 gap-2">
                                                   {fontSizes.map(size => (
                                                        <button
                                                             key={size.id}

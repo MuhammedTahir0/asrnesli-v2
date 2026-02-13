@@ -216,31 +216,11 @@ const ShareStudio = () => {
      }
 
      const ensureTokenAccess = () => {
-          if (!user) {
-               toast.error('Devam etmek için giriş yapmalısınız.')
-               return false
-          }
-          if (!isProfileReady) {
-               toast.error('Token bilgileriniz yükleniyor.')
-               return false
-          }
-          if (tokens <= 0) {
-               toast.error('Token yetersiz.')
-               setShowAdPanel(true)
-               return false
-          }
           return true
      }
 
      const consumeAndSyncToken = async () => {
-          const { data, error } = await consumeToken()
-          if (error) {
-               toast.error('Token düşürülemedi. Lütfen tekrar deneyin.')
-               return null
-          }
-          const nextTokens = extractTokens(data)
-          updateTokens(nextTokens)
-          return nextTokens
+          return tokens
      }
 
      const grantAndSyncToken = async () => {
@@ -787,12 +767,12 @@ const ShareStudio = () => {
                                         <p className="text-lg font-semibold">
                                              {isProfileReady ? `${tokens} token kaldı` : 'Token yükleniyor...'}
                                         </p>
-                                        <p className="text-[11px] text-white/60">Her indirme/paylaşım 1 token.</p>
+                                        <p className="text-[11px] text-white/60">Her reklam 1 token kazandırır.</p>
                                    </div>
                               </div>
-                              {isProfileReady && tokens <= 0 && (
+                              {isProfileReady && (
                                    <div className="relative mt-3 rounded-xl border border-accent-gold/20 bg-black/30 p-3">
-                                        <p className="text-[11px] text-white/70 mb-2">Token bitti. Reklam izleyerek devam edebilirsiniz.</p>
+                                        <p className="text-[11px] text-white/70 mb-2">Reklam izleyerek token kazanabilirsiniz.</p>
                                         <button
                                              onClick={() => setShowAdPanel(prev => !prev)}
                                              className="w-full py-2.5 rounded-lg bg-gradient-to-r from-accent-gold to-accent-gold-light text-background-dark text-xs font-bold uppercase tracking-widest shadow-lg shadow-accent-gold/20"

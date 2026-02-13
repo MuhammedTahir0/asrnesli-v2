@@ -71,7 +71,8 @@ const Login = () => {
           setLoading(false)
 
           if (error) {
-               let errorMessage = 'Giriş yapılamadı. Lütfen bilgilerinizi kontrol edin.'
+               console.error('HATA DETAYI:', error);
+               let errorMessage = error.message || 'Giriş yapılamadı.';
 
                if (error.message?.includes('Invalid login')) {
                     errorMessage = 'E-posta veya şifre hatalı.'

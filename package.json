@@ -36,5 +36,9 @@
     "vite": "^5.1.4",
     "vite-plugin-pwa": "^1.2.0",
     "vitest": "^4.0.18"
+  },
+  "overrides": {
+    "sourcemap-codec": "npm:@jridgewell/sourcemap-codec@^1.5.0",
+    "glob": "^11.0.2"
   }
 }

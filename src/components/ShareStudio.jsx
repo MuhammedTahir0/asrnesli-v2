@@ -69,7 +69,7 @@ const ShareStudio = () => {
 
      const tokens = Number.isFinite(profile?.tokens) ? profile.tokens : 0
      const isProfileReady = !!profile
-     const canSpendToken = isProfileReady && tokens > 0
+     const canSpendToken = true // Token check disabled
 
      // Load content from navigation state
      useEffect(() => {
@@ -852,7 +852,7 @@ const ShareStudio = () => {
                                              </div>
                                         </div>
                                         {/* Template Grid */}
-                                        <div className="grid grid-cols-4 gap-2">
+                                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 pb-safe">
                                              {filteredTemplates.map((t) => (
                                                   <button
                                                        key={t.id}
@@ -1041,7 +1041,7 @@ const ShareStudio = () => {
                                              ))}
                                         </div>
                                         {/* Background Grid */}
-                                        <div className="grid grid-cols-4 gap-2">
+                                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                                              {/* Upload Button */}
                                              <button
                                                   onClick={() => fileInputRef.current?.click()}

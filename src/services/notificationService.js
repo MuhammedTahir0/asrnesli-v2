@@ -49,6 +49,6 @@ export const notificationService = {
           // Not: Safari ve Chrome mobil kısıtlamaları nedeniyle 
           // gerçek zamanlı planlanmış bildirimler genellikle bir backend/push service gerektirir.
           // Ancak uygulama açıkken setTimeout veya sistem saati kontrolüyle simüle edilebilir.
-          console.log(`Bildirim planlandı: ${prayerName} saat ${time}`);
+          // Ancak uygulama açıkken setTimeout veya sistem saati kontrolüyle simüle edilebilir.
      }
 };

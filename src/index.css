@@ -2,11 +2,12 @@
 
 @theme {
   --color-primary: #2D5A27;
-  --color-accent-green: #2D5A27;
+  --color-accent-green: #1B331D;
   --color-accent-gold: #C5A059;
   --color-background-light: #FDFBF7;
-  --color-background-dark: #1a1c1a;
+  --color-background-dark: #0d1a0d;
   --color-surface-light: #FFFFFF;
+  --color-surface-dark: #142914;
   --color-text-primary: #141514;
   --color-text-secondary: #727a71;
 
@@ -42,27 +43,80 @@
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
 
+  --shadow-soft: 0 10px 30px -10px rgba(0, 0, 0, 0.1), 0 4px 10px -5px rgba(0, 0, 0, 0.05);
+  --shadow-gold: 0 10px 25px -5px rgba(197, 160, 89, 0.3), 0 8px 10px -6px rgba(197, 160, 89, 0.2);
+
   --background-image-islamic-pattern: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C5A059' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
 
 @layer base {
   body {
-    @apply font-display bg-background-light text-text-primary;
+    font-family: var(--font-display);
+    background-color: var(--color-background-light);
+    color: var(--color-text-primary);
+    transition-property: color, background-color;
+    transition-duration: 300ms;
+  }
+
+  .dark body {
+    background-color: var(--color-background-dark);
+    color: var(--color-accent-gold);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply tracking-tight;
   }
 }
 
-.calligraphy {
-  font-family: 'Noto Naskh Arabic', serif;
+@layer components {
+  .calligraphy {
+    font-family: 'Noto Naskh Arabic', serif;
+  }
 }
 
-/* Hide scrollbar for clean aesthetic */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
+@layer utilities {
 
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  /* Hide scrollbar for clean aesthetic */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .glass-card {
+    @apply bg-white/70 dark:bg-[#1C1D1C]/70 backdrop-blur-xl border border-white/20 dark:border-white/5;
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.05) 50%,
+        rgba(255, 255, 255, 0) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite linear;
+  }
 }
 
 #root {

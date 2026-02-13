@@ -44,7 +44,6 @@ export const AuthProvider = ({ children }) => {
 
      // KRİTİK DÜZELTME: Bloklamayan Logout
      const logout = async () => {
-          console.log('🚪 Logout süreci başlatıldı...')
           setLogoutLoading(true)
 
           // 1. Önce local state'leri temizle (UI anında tepki vermeli)
@@ -95,7 +94,6 @@ export const AuthProvider = ({ children }) => {
 
           const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
                if (!mounted) return
-               console.log('🔔 Auth Event:', event)
 
                if (s?.user) {
                     setSession(s)

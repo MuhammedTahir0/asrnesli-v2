@@ -7,6 +7,27 @@ import { adminListUsersTokens, adminAdjustToken, adminListTokenLogs, adminGetAdS
 import { useAuth } from '../contexts/AuthContext'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts'
 
+const sidebarItems = [
+     { id: 'stats', title: 'Genel Bakış', icon: 'dashboard', color: '#C5A059' },
+     { id: 'verses', title: 'Ayetler', icon: 'menu_book', color: '#6f9b69' },
+     { id: 'hadiths', title: 'Hadisler', icon: 'auto_stories', color: '#C5A059' },
+     { id: 'ilmihals', title: 'İlmihal', icon: 'library_books', color: '#4a7c44' },
+     { id: 'names_of_allah', title: 'Esma-ül Hüsna', icon: 'stars', color: '#b08d4d' },
+     { id: 'stories', title: 'Kıssalar', icon: 'history_edu', color: '#6f9b69' },
+     { id: 'prayers', title: 'Dualar', icon: 'front_hand', color: '#ee6c4d' },
+     { id: 'wisdom_notes', title: 'Hikmetli Sözler', icon: 'format_quote', color: '#C5A059' },
+     { id: 'religious_info', title: 'Dini Bilgiler', icon: 'info', color: '#4a7c44' },
+     { id: 'prayer_requests', title: 'Dua Kardeşliği', icon: 'group', color: '#6f9b69' },
+     { id: 'audios', title: 'Sesli İçerikler', icon: 'headphones', color: '#b08d4d' },
+     { id: 'quiz_questions', title: 'Bilgi Yarışması', icon: 'quiz', color: '#C5A059' },
+     { id: 'daily_checklists', title: 'Günlük Çetele', icon: 'checklist', color: '#0a9396' },
+     { id: 'prayer_time_content', title: 'Vakitlik İçerik', icon: 'schedule', color: '#4a7c44' },
+     { id: 'categories', title: 'Kategoriler', icon: 'category', color: '#C5A059' },
+     { id: 'users', title: 'Kullanıcı Yönetimi', icon: 'people', color: '#2D5A27' },
+     { id: 'tokens', title: 'Token İşlemleri', icon: 'payments', color: '#C5A059' },
+     { id: 'ads', title: 'Reklam İstatistikleri', icon: 'ads_click', color: '#fbbf24' },
+]
+
 const AdminPanel = () => {
      const { user } = useAuth()
      const navigate = useNavigate()
@@ -60,27 +81,23 @@ const AdminPanel = () => {
           name_tr: '',
           meaning: '',
           description: '',
+          title: '',
+          author: '',
+          difficulty: 'easy',
+          url: '',
+          task_name: '',
+          points: 10,
           display_date: new Date().toISOString().split('T')[0]
      })
 
-     const sidebarItems = [
-          { id: 'verses', title: 'Ayet-i Kerime Yönetimi', icon: 'menu_book', color: '#6f9b69' },
-          { id: 'hadiths', title: 'Hadis-i Şerif Yönetimi', icon: 'format_quote', color: '#C5A059' },
-          { id: 'ilmihals', title: 'İlmihal Rehberi Seçenekleri', icon: 'help_center', color: '#4a7c44' },
-          { id: 'names_of_allah', title: 'Esma-ül Hüsna Yönetimi', icon: 'hotel_class', color: '#b08d4d' },
-          { id: 'daily_content', title: 'Günlük Akış Takvimi', icon: 'today', color: '#2D5A27' },
-          { id: 'users', title: 'Kullanıcı & Token Yönetimi', icon: 'group', color: '#9333ea' },
-          { id: 'ad_stats', title: 'Reklam Analizi & İstatistik', icon: 'monitoring', color: '#fbbf24' },
-     ]
-
      useEffect(() => {
           fetchStats()
-          if (activeTab === 'users') {
+          if (activeTab === 'users' || activeTab === 'tokens') {
                fetchUsers()
                fetchTokenLogs()
-          } else if (activeTab === 'ad_stats') {
+          } else if (activeTab === 'ads') {
                fetchAdStats()
-          } else {
+          } else if (activeTab !== 'stats') {
                fetchItems()
           }
      }, [activeTab, adStatsDateFilter])
@@ -92,13 +109,29 @@ const AdminPanel = () => {
                const { count: iCount } = await supabase.from('ilmihals').select('*', { count: 'exact', head: true })
                const { count: nCount } = await supabase.from('names_of_allah').select('*', { count: 'exact', head: true })
                const { count: uCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true })
-               setStats({ verses: vCount || 0, hadiths: hCount || 0, ilmihals: iCount || 0, names: nCount || 0, users: uCount || 0 })
+               const { count: sCount } = await supabase.from('stories').select('*', { count: 'exact', head: true })
+               const { count: pCount } = await supabase.from('prayers').select('*', { count: 'exact', head: true })
+               const { count: ptcCount } = await supabase.from('prayer_time_content').select('*', { count: 'exact', head: true })
+               const { count: ttCount } = await supabase.from('token_transactions').select('*', { count: 'exact', head: true })
+               const { count: aeCount } = await supabase.from('ad_events').select('*', { count: 'exact', head: true })
+
+               setStats({
+                    verses: vCount || 0,
+                    hadiths: hCount || 0,
+                    ilmihals: iCount || 0,
+                    names: nCount || 0,
+                    users: uCount || 0,
+                    stories: sCount || 0,
+                    prayers: pCount || 0
+               })
           } catch (err) {
                console.error('Stats error:', err)
           }
      }
 
      const fetchItems = async () => {
+          if (activeTab === 'stats' || activeTab === 'users' || activeTab === 'tokens' || activeTab === 'ads') return;
+
           setLoading(true)
           try {
                let query;
@@ -108,10 +141,20 @@ const AdminPanel = () => {
                      verse:verses(content_tr),
                      hadith:hadiths(content),
                      ilmihal:ilmihals(question),
-                     nameOfAllah:names_of_allah(name_tr)
+                     nameOfAllah:names_of_allah(name_tr),
+                     story:stories(title),
+                     prayer:prayers(title),
+                     wisdom:wisdom_notes(content)
                  `).order('display_date', { ascending: false })
                } else {
-                    query = supabase.from(activeTab).select('*').order('created_at', { ascending: false })
+                    // Tablo ismi eşleştirmeleri
+                    const tableMap = {
+                         'tokens': 'token_transactions',
+                         'ads': 'ad_events',
+                         'stats': 'user_stats'
+                    }
+                    const tableName = tableMap[activeTab] || activeTab;
+                    query = supabase.from(tableName).select('*').order('created_at', { ascending: false })
                }
 
                const { data, error } = await query
@@ -228,6 +271,18 @@ const AdminPanel = () => {
                          meaning: formData.meaning,
                          description: formData.description
                     }
+               } else if (table === 'stories') {
+                    dataToInsert = { title: formData.title, content: formData.content, source: formData.source }
+               } else if (table === 'prayers') {
+                    dataToInsert = { title: formData.title, content_tr: formData.content_tr, content_ar: formData.content_ar, source: formData.source }
+               } else if (table === 'wisdom_notes') {
+                    dataToInsert = { author: formData.author, content: formData.content }
+               } else if (table === 'religious_info') {
+                    dataToInsert = { title: formData.title, content: formData.content, source: formData.source }
+               } else if (table === 'audios') {
+                    dataToInsert = { title: formData.title, url: formData.url, type: 'podcast' }
+               } else if (table === 'daily_checklists') {
+                    dataToInsert = { task_name: formData.task_name, points: parseInt(formData.points) }
                }
 
                const { error } = await supabase.from(table).insert([dataToInsert])
@@ -324,7 +379,7 @@ const AdminPanel = () => {
                          </div>
 
                          <div className="flex items-center gap-3 md:gap-6">
-                              {activeTab === 'ad_stats' ? (
+                              {activeTab === 'ads' ? (
                                    <div className="flex items-center gap-2 md:gap-4 bg-[#fcfaf7] px-4 py-2 rounded-xl border border-[#e3e1dd]">
                                         <div className="flex flex-col">
                                              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Başlangıç</span>
@@ -359,7 +414,7 @@ const AdminPanel = () => {
                                    </div>
                               )}
 
-                              {activeTab !== 'users' && activeTab !== 'ad_stats' && (
+                              {activeTab !== 'users' && activeTab !== 'ads' && (
                                    <button
                                         onClick={() => {
                                              setFormData({ ...formData, type: activeTab === 'daily_content' ? 'verses' : activeTab })
@@ -506,7 +561,7 @@ const AdminPanel = () => {
                                                   </tbody>
                                              </table>
                                         </div>
-                                   ) : activeTab === 'ad_stats' ? (
+                                   ) : activeTab === 'ads' ? (
                                         <div className="space-y-12">
                                              {/* Ad Stats Summary Cards */}
                                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
@@ -639,7 +694,16 @@ const AdminPanel = () => {
                                                                                           activeTab === 'hadiths' ? item.content :
                                                                                                activeTab === 'ilmihals' ? item.question :
                                                                                                     activeTab === 'names_of_allah' ? item.name_tr :
-                                                                                                         activeTab === 'daily_content' ? `Takvim: ${item.display_date}` : ''}
+                                                                                                         activeTab === 'stories' ? item.title :
+                                                                                                              activeTab === 'prayers' ? item.title :
+                                                                                                                   activeTab === 'wisdom_notes' ? item.content :
+                                                                                                                        activeTab === 'religious_info' ? item.title :
+                                                                                                                             activeTab === 'audios' ? item.title :
+                                                                                                                                  activeTab === 'users' ? 'Kullanıcı Adı / E-posta' :
+                                                                                                                                       activeTab === 'tokens' ? 'İşlem Tipi' :
+                                                                                                                                            activeTab === 'ads' ? 'Etkinlik Tipi' :
+                                                                                                                                                 activeTab === 'daily_checklists' ? item.task_name :
+                                                                                                                                                      activeTab === 'daily_content' ? `Takvim: ${item.display_date}` : ''}
                                                                                 </p>
                                                                                 <div className="absolute -left-4 top-0 bottom-0 w-1 bg-[#C5A059] scale-y-0 group-hover:scale-y-100 transition-transform origin-top duration-300 rounded-full" />
                                                                            </div>
@@ -726,8 +790,14 @@ const AdminPanel = () => {
                                                             {[
                                                                  { id: 'verses', label: '📖 Ayet' },
                                                                  { id: 'hadiths', label: '📜 Hadis' },
+                                                                 { id: 'stories', label: '📖 Hikaye' },
+                                                                 { id: 'prayers', label: '🤲 Dua' },
+                                                                 { id: 'wisdom_notes', label: '💡 Hikmet' },
                                                                  { id: 'ilmihals', label: '📚 İlmihal' },
-                                                                 { id: 'names_of_allah', label: '✨ Esma' }
+                                                                 { id: 'names_of_allah', label: '✨ Esma' },
+                                                                 { id: 'religious_info', label: 'ℹ️ Bilgi' },
+                                                                 { id: 'daily_checklists', label: '✅ Amel' },
+                                                                 { id: 'audios', label: '🎙️ Ses' }
                                                             ].map(opt => (
                                                                  <button
                                                                       key={opt.id}
@@ -814,6 +884,103 @@ const AdminPanel = () => {
                                                                       <label className="text-[10px] md:text-[12px] font-bold text-[#141514] uppercase tracking-[0.3em]">Anlamı</label>
                                                                       <textarea value={formData.meaning} onChange={(e) => setFormData({ ...formData, meaning: e.target.value })} className="w-full rounded-2xl md:rounded-3xl border-2 border-[#e3e1dd] bg-white text-sm md:text-lg font-medium p-6 md:p-8 leading-relaxed focus:ring-8 focus:ring-[#C5A059]/5 focus:border-[#C5A059] transition-all resize-none shadow-inner" rows="3" placeholder="Dünyada bütün mahlûkata merhamet eden..." />
                                                                  </div>
+                                                            </div>
+                                                       )}
+
+                                                       {formData.type === 'stories' && (
+                                                            <div className="space-y-6 md:space-y-10 animate-in fade-in slide-in-from-right-8 duration-700">
+                                                                 <div className="flex flex-col gap-4">
+                                                                      <label className="text-[10px] md:text-[12px] font-bold text-[#141514] uppercase tracking-[0.3em]">Hikaye Başlığı</label>
+                                                                      <input value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="h-12 md:h-16 rounded-xl md:rounded-2xl border-2 border-[#e3e1dd] bg-white px-4 md:px-8 font-bold focus:ring-0 focus:border-[#C5A059] transition-all shadow-sm" placeholder="Örn: Hz. Ömer'in Adaleti" />
+                                                                 </div>
+                                                                 <div className="flex flex-col gap-4">
+                                                                      <label className="text-[10px] md:text-[12px] font-bold text-[#141514] uppercase tracking-[0.3em]">Hikaye İçeriği</label>
+                                                                      <textarea value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} className="w-full rounded-2xl p-6 border-2 border-[#e3e1dd] bg-white text-base leading-relaxed focus:border-[#C5A059] transition-all resize-none" rows="10" placeholder="Hikaye metnini buraya yazın..." />
+                                                                 </div>
+                                                                 <div className="flex flex-col gap-4">
+                                                                      <label className="text-[10px] md:text-[12px] font-bold text-[#141514] uppercase tracking-[0.3em]">Kaynak</label>
+                                                                      <input value={formData.source} onChange={(e) => setFormData({ ...formData, source: e.target.value })} className="h-12 rounded-xl border-2 border-[#e3e1dd] bg-white px-4 font-bold" placeholder="Örn: Taberi" />
+                                                                 </div>
+                                                            </div>
+                                                       )}
+
+                                                       {formData.type === 'prayers' && (
+                                                            <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-700">
+                                                                 <div className="flex flex-col gap-4">
+                                                                      <label className="text-[10px] font-bold text-[#141514] uppercase tracking-widest">Dua Başlığı</label>
+                                                                      <input value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="h-12 rounded-xl border-2 border-[#e3e1dd] bg-white px-4 font-bold" placeholder="Örn: Yemek Duası" />
+                                                                 </div>
+                                                                 <div className="flex flex-col gap-4">
+                                                                      <label className="text-[10px] font-bold text-[#141514] uppercase tracking-widest">Arapça Metin</label>
+                                                                      <textarea dir="rtl" value={formData.content_ar} onChange={(e) => setFormData({ ...formData, content_ar: e.target.value })} className="w-full rounded-2xl p-6 border-2 border-[#e3e1dd] bg-white text-2xl calligraphy" rows="3" />
+                                                                 </div>
+                                                                 <div className="flex flex-col gap-4">
+                                                                      <label className="text-[10px] font-bold text-[#141514] uppercase tracking-widest">Türkçe Meali</label>
+                                                                      <textarea value={formData.content_tr} onChange={(e) => setFormData({ ...formData, content_tr: e.target.value })} className="w-full rounded-2xl p-6 border-2 border-[#e3e1dd] bg-white text-base" rows="3" />
+                                                                 </div>
+                                                            </div>
+                                                       )}
+
+                                                       {formData.type === 'wisdom_notes' && (
+                                                            <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-700">
+                                                                 <div className="flex flex-col gap-4">
+                                                                      <label className="text-[10px] font-bold text-[#141514] uppercase tracking-widest">Sözü Söyleyen (Yazar/Alim)</label>
+                                                                      <input value={formData.author} onChange={(e) => setFormData({ ...formData, author: e.target.value })} className="h-12 rounded-xl border-2 border-[#e3e1dd] bg-white px-4 font-bold" placeholder="Örn: Mevlana Celaleddin Rumi" />
+                                                                 </div>
+                                                                 <div className="flex flex-col gap-4">
+                                                                      <label className="text-[10px] font-bold text-[#141514] uppercase tracking-widest">Hikmetli Söz</label>
+                                                                      <textarea value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} className="w-full rounded-2xl p-6 border-2 border-[#e3e1dd] bg-white text-lg italic" rows="5" />
+                                                                 </div>
+                                                            </div>
+                                                       )}
+
+                                                       {formData.type === 'daily_checklists' && (
+                                                            <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-700">
+                                                                 <div className="flex flex-col gap-4">
+                                                                      <label className="text-[10px] font-bold text-[#141514] uppercase tracking-widest">Görev Adı</label>
+                                                                      <input value={formData.task_name} onChange={(e) => setFormData({ ...formData, task_name: e.target.value })} className="h-12 rounded-xl border-2 border-[#e3e1dd] bg-white px-4 font-bold" placeholder="Örn: Teheccüd Namazı" />
+                                                                 </div>
+                                                                 <div className="flex flex-col gap-4">
+                                                                      <label className="text-[10px] font-bold text-[#141514] uppercase tracking-widest">Puan Miktarı</label>
+                                                                      <input type="number" value={formData.points} onChange={(e) => setFormData({ ...formData, points: e.target.value })} className="h-12 rounded-xl border-2 border-[#e3e1dd] bg-white px-4 font-bold" />
+                                                                 </div>
+                                                            </div>
+                                                       )}
+
+                                                       {formData.type === 'religious_info' && (
+                                                            <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-700">
+                                                                 <div className="flex flex-col gap-4">
+                                                                      <label className="text-[10px] font-bold text-[#141514] uppercase tracking-widest">Bilgi Başlığı</label>
+                                                                      <input value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="h-12 rounded-xl border-2 border-[#e3e1dd] bg-white px-4 font-bold" />
+                                                                 </div>
+                                                                 <div className="flex flex-col gap-4">
+                                                                      <label className="text-[10px] font-bold text-[#141514] uppercase tracking-widest">Açıklama / Metin</label>
+                                                                      <textarea value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} className="w-full rounded-2xl p-6 border-2 border-[#e3e1dd] bg-white text-base" rows="8" />
+                                                                 </div>
+                                                            </div>
+                                                       )}
+
+                                                       {formData.type === 'audios' && (
+                                                            <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-700">
+                                                                 <div className="flex flex-col gap-4">
+                                                                      <label className="text-[10px] font-bold text-[#141514] uppercase tracking-widest">Yayın Başlığı</label>
+                                                                      <input value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="h-12 rounded-xl border-2 border-[#e3e1dd] bg-white px-4 font-bold" />
+                                                                 </div>
+                                                                 <div className="flex flex-col gap-4">
+                                                                      <label className="text-[10px] font-bold text-[#141514] uppercase tracking-widest">Yayın URL (MP3/Stream)</label>
+                                                                      <input value={formData.url} onChange={(e) => setFormData({ ...formData, url: e.target.value })} className="h-12 rounded-xl border-2 border-[#e3e1dd] bg-white px-4 font-bold" placeholder="https://..." />
+                                                                 </div>
+                                                            </div>
+                                                       )}
+
+                                                       {formData.type === 'quiz_questions' && (
+                                                            <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-700">
+                                                                 <div className="flex flex-col gap-4">
+                                                                      <label className="text-[10px] font-bold text-[#141514] uppercase tracking-widest">Soru Metni</label>
+                                                                      <textarea value={formData.question} onChange={(e) => setFormData({ ...formData, question: e.target.value })} className="w-full rounded-2xl p-6 border-2 border-[#e3e1dd] bg-white text-base" rows="3" />
+                                                                 </div>
+                                                                 {/* Note: Options handling would need more complex state, using a simple placeholder for now or assuming JSON format */}
+                                                                 <p className="text-[10px] text-gray-400 italic">Seçenekler ve doğru cevap şimdilik varsayılan olarak kaydedilecektir.</p>
                                                             </div>
                                                        )}
                                                   </div>

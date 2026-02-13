@@ -31,7 +31,7 @@ export const templates = {
           icon: 'history_edu',
           category: 'klasik',
           container: 'bg-[#1F2937] text-[#E5E7EB]',
-          overlay: 'arabesque',
+          overlay: null,
           text: 'font-serif text-xl md:text-2xl leading-loose text-[#D1D5DB] px-8 border-l-2 border-[#C5A059] pl-6 italic',
           source: 'text-xs text-[#C5A059] font-bold mt-6 self-start pl-8',
           decoration: 'lines'

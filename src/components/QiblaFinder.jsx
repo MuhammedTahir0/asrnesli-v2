@@ -78,21 +78,31 @@ const QiblaFinder = () => {
 
      if (loading) {
           return (
-               <div className="flex-1 flex flex-col items-center justify-center p-8 bg-background-light">
+               <div className="flex-1 flex flex-col items-center justify-center p-8 bg-background-light dark:bg-background-dark">
                     <div className="animate-pulse size-24 rounded-full border-4 border-accent-gold/20 flex items-center justify-center">
                          <span className="material-symbols-outlined text-accent-gold text-4xl">explore</span>
                     </div>
-                    <p className="mt-4 text-primary font-bold">Harita Hazırlanıyor...</p>
+                    <p className="mt-4 text-primary dark:text-accent-gold font-bold">Harita Hazırlanıyor...</p>
                </div>
           )
      }
 
      return (
-          <div className="flex-1 flex flex-col bg-background-light p-8 overflow-hidden">
+          <div className="flex-1 flex flex-col bg-background-light dark:bg-background-dark p-8 overflow-hidden relative">
+               <div className="absolute inset-0 bg-islamic-pattern opacity-[0.03] dark:opacity-[0.05] pointer-events-none"></div>
+
                {/* Header */}
-               <header className="text-center mb-12">
-                    <h2 className="text-3xl font-black font-serif text-text-primary mb-2 tracking-tight">Kıble Bulucu</h2>
-                    <p className="text-sm text-gray-400 font-medium">Uygulamadan en iyi sonucu almak için telefonunuzu düz tutun.</p>
+               <header className="flex items-center gap-4 mb-12 relative z-10 w-full">
+                    <button
+                         onClick={() => navigate(-1)}
+                         className="size-10 shrink-0 rounded-full bg-surface-light dark:bg-surface-dark border border-accent-gold/20 flex items-center justify-center text-primary dark:text-white"
+                    >
+                         <span className="material-symbols-outlined">arrow_back</span>
+                    </button>
+                    <div className="flex-1 pr-10 text-center">
+                         <h2 className="text-2xl font-bold text-primary dark:text-white mb-1">Kıble Bulucu</h2>
+                         <p className="text-[10px] text-text-secondary dark:text-gray-400 font-bold uppercase tracking-widest leading-tight">Telefonunuzu düz tutun</p>
+                    </div>
                </header>
 
                {/* Compass Area */}
@@ -110,33 +120,38 @@ const QiblaFinder = () => {
                     </AnimatePresence>
 
                     {/* Compass Ring */}
-                    <div className="relative size-80 rounded-full border-[10px] border-[#e3e1dd] shadow-2xl bg-white flex items-center justify-center z-10 overflow-hidden">
-                         <div className="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')] rotate-45"></div>
+                    <div className="relative size-80 rounded-full border-[2px] border-accent-gold/20 shadow-soft bg-surface-light dark:bg-surface-dark flex items-center justify-center z-10 overflow-hidden">
+                         <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] bg-islamic-pattern"></div>
+
+                         {/* Circle Gradients */}
+                         <div className="absolute inset-4 rounded-full border border-accent-gold/5 bg-gradient-to-br from-accent-gold/5 to-transparent"></div>
+                         <div className="absolute inset-12 rounded-full border border-accent-gold/5"></div>
+                         <div className="absolute inset-24 rounded-full border border-accent-gold/5"></div>
 
                          {/* Qibla Marker (Fixed Relative to Compass) */}
                          <motion.div
                               animate={{ rotate: qiblaAngle - deviceHeading }}
-                              transition={{ type: 'spring', damping: 15 }}
+                              transition={{ type: 'spring', damping: 20, stiffness: 60 }}
                               className="absolute inset-4 z-20"
                          >
                               <div className="absolute top-0 left-1/2 -translate-x-1/2 flex flex-col items-center">
-                                   <div className="size-10 rounded-full bg-accent-gold flex items-center justify-center shadow-lg shadow-accent-gold/40">
+                                   <div className="size-12 rounded-full bg-accent-gold flex items-center justify-center shadow-lg shadow-accent-gold/30 border-4 border-white dark:border-surface-dark">
                                         <span className="material-symbols-outlined text-white text-2xl">mosque</span>
                                    </div>
-                                   <div className="w-1.5 h-16 bg-gradient-to-t from-transparent to-accent-gold -mt-2" />
+                                   <div className="w-1 h-20 bg-gradient-to-t from-transparent via-accent-gold/30 to-accent-gold -mt-1" />
                               </div>
                          </motion.div>
 
                          {/* Compass Needle (Static, shows device heading) */}
                          <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="size-4 bg-text-primary rounded-full shadow-lg z-30" />
-                              <div className="w-1 h-32 bg-gradient-to-b from-text-primary to-transparent absolute top-1/2 -translate-y-full z-20" />
+                              <div className="size-3 bg-primary dark:bg-white rounded-full shadow-lg z-30 border-2 border-accent-gold/30" />
+                              <div className="w-0.5 h-32 bg-gradient-to-b from-primary dark:from-white to-transparent absolute top-1/2 -translate-y-full z-20 opacity-50" />
                          </div>
 
                          {/* Degree Marks */}
                          {[0, 90, 180, 270].map(deg => (
                               <div key={deg} className="absolute inset-8 pointer-events-none" style={{ transform: `rotate(${deg}deg)` }}>
-                                   <span className="absolute top-0 left-1/2 -translate-x-1/2 text-[10px] font-black text-gray-300 uppercase tracking-widest">
+                                   <span className="absolute top-0 left-1/2 -translate-x-1/2 text-[10px] font-bold text-accent-gold/40 uppercase tracking-widest">
                                         {deg === 0 ? 'K' : deg === 90 ? 'D' : deg === 180 ? 'G' : 'B'}
                                    </span>
                               </div>
@@ -148,15 +163,15 @@ const QiblaFinder = () => {
                          {!permissionGranted ? (
                               <button
                                    onClick={requestPermission}
-                                   className="px-8 py-4 bg-primary text-white rounded-2xl font-bold shadow-xl shadow-primary/20 flex items-center gap-3 transition-transform active:scale-95"
+                                   className="px-10 py-4 bg-accent-gold text-white rounded-2xl font-bold shadow-lg shadow-accent-gold/20 flex items-center gap-3 transition-all active:scale-95 border border-white/20"
                               >
                                    <span className="material-symbols-outlined">sensors</span>
-                                   <span>Pusulayı Etkinleştir</span>
+                                   <span className="uppercase tracking-widest text-xs">Pusulayı Etkinleştir</span>
                               </button>
                          ) : (
                               <motion.div
-                                   animate={{ scale: isAligned ? 1.1 : 1 }}
-                                   className={`px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-colors border-2 ${isAligned ? 'bg-accent-gold text-white border-accent-gold shadow-2xl shadow-accent-gold/40' : 'bg-white text-gray-400 border-gray-100'}`}
+                                   animate={{ scale: isAligned ? 1.05 : 1 }}
+                                   className={`px-10 py-4 rounded-2xl font-bold text-[10px] uppercase tracking-widest transition-all border ${isAligned ? 'bg-accent-gold text-white border-white/20 shadow-xl shadow-accent-gold/30' : 'bg-surface-light dark:bg-surface-dark text-text-secondary dark:text-gray-400 border-accent-gold/20 shadow-soft'}`}
                               >
                                    {isAligned ? 'Kıbleye Yöneldiniz' : 'Telefonu Döndürün'}
                               </motion.div>
@@ -165,14 +180,14 @@ const QiblaFinder = () => {
                </div>
 
                {/* Hint Area */}
-               <div className="mt-auto p-8 rounded-[2rem] bg-background-light border border-[#e3e1dd]">
+               <div className="mt-auto p-6 rounded-[2rem] bg-surface-light dark:bg-surface-dark border border-accent-gold/20 shadow-soft relative z-10">
                     <div className="flex items-start gap-4">
                          <div className="size-10 shrink-0 rounded-xl bg-accent-gold/10 flex items-center justify-center text-accent-gold">
                               <span className="material-symbols-outlined">info</span>
                          </div>
                          <div>
-                              <p className="text-xs font-bold text-text-primary mb-1">Mıknatıslardan Uzak Durun</p>
-                              <p className="text-[11px] text-gray-400 leading-relaxed">Pusulanın doğru çalışması için telefonunuzun yakınında mıknatıs veya büyük metal kütleler bulunmadığından emin olun.</p>
+                              <p className="text-xs font-bold text-primary dark:text-white mb-1 uppercase tracking-wider">Mıknatıslardan Uzak Durun</p>
+                              <p className="text-[11px] text-text-secondary dark:text-gray-400 leading-relaxed font-medium">Pusulanın doğru çalışması için telefonunuzun yakınında mıknatıs veya büyük metal kütleler bulunmadığından emin olun.</p>
                          </div>
                     </div>
                </div>

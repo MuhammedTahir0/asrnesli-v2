@@ -566,6 +566,31 @@ const ShareStudio = () => {
                          ))}
                     </div>
 
+                    {/* Token Badge */}
+                    {isProfileReady && (
+                         <button
+                              onClick={() => {
+                                   if (tokens === 0) {
+                                        setActiveTab('watermark')
+                                        setTimeout(() => setShowAdPanel(true), 300)
+                                   }
+                              }}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border mr-2 ${tokens === 0
+                                   ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-700/30 animate-pulse hover:bg-amber-100 dark:hover:bg-amber-900/30 cursor-pointer shadow-sm'
+                                   : 'bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-white/10 cursor-default'
+                                   }`}
+                              title={tokens === 0 ? "Token kazanmak için tıkla" : "Mevcut Hak"}
+                         >
+                              <span className={`material-symbols-outlined text-sm ${tokens === 0 ? 'animate-bounce' : ''}`}>
+                                   {tokens === 0 ? 'lock' : 'verified'}
+                              </span>
+                              <span>{tokens} Hak</span>
+                              {tokens === 0 && (
+                                   <span className="bg-amber-500 text-white px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wide ml-1">Kazan</span>
+                              )}
+                         </button>
+                    )}
+
                     <button
                          onClick={handleDownload}
                          className="text-accent-green dark:text-primary font-bold text-sm hover:opacity-80 disabled:opacity-50 flex items-center gap-1"
@@ -576,29 +601,7 @@ const ShareStudio = () => {
                     </button>
                </header>
 
-               {/* Token Warning Banner */}
-               {isProfileReady && tokens === 0 && (
-                    <div className="bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-3 shadow-lg">
-                         <div className="flex items-center justify-between gap-3 text-white">
-                              <div className="flex items-center gap-2">
-                                   <span className="material-symbols-outlined text-2xl animate-pulse">error</span>
-                                   <div>
-                                        <p className="font-bold text-sm">Token Bitti!</p>
-                                        <p className="text-xs opacity-90">İndirme ve paylaşım için token gereklidir.</p>
-                                   </div>
-                              </div>
-                              <button
-                                   onClick={() => {
-                                        setActiveTab('watermark')
-                                        setTimeout(() => setShowAdPanel(true), 300)
-                                   }}
-                                   className="flex-shrink-0 px-4 py-2 bg-white text-orange-600 rounded-lg text-xs font-bold hover:bg-gray-100 transition-all"
-                              >
-                                   Token Al
-                              </button>
-                         </div>
-                    </div>
-               )}
+
 
                {/* Canvas Area */}
                <div className="flex-1 relative bg-background-light dark:bg-background-dark flex items-center justify-center p-4 overflow-hidden">
@@ -621,9 +624,7 @@ const ShareStudio = () => {
                               style={getCanvasStyle()}
                          >
                               {/* Overlay */}
-                              {currentTemplate.overlay === 'arabesque' && (
-                                   <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')]" />
-                              )}
+
                               {currentTemplate.overlay === 'stars' && (
                                    <div className="absolute inset-0">
                                         {[...Array(20)].map((_, i) => (

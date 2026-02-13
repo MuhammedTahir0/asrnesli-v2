@@ -51,13 +51,13 @@ const Categories = () => {
                          <motion.button
                               whileTap={{ scale: 0.9 }}
                               onClick={() => navigate(-1)}
-                              className="size-12 rounded-2xl bg-surface-light dark:bg-surface-dark shadow-soft border border-gray-100 dark:border-white/10 flex items-center justify-center text-primary dark:text-white hover:bg-accent-gold/5 transition-colors"
+                              className="size-12 rounded-2xl bg-surface-light dark:bg-surface-dark shadow-soft border border-accent-gold/20 flex items-center justify-center text-primary dark:text-white hover:bg-accent-gold/5 transition-colors"
                          >
                               <span className="material-symbols-outlined font-light">arrow_back</span>
                          </motion.button>
                          <div className="text-right">
-                              <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-accent-green to-accent-gold dark:from-white dark:to-accent-gold tracking-tight">Kütüphane</h1>
-                              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-accent-gold mt-1 calligraphy">ASR NESLİ</p>
+                              <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-accent-green to-accent-gold dark:from-accent-gold dark:to-accent-gold/50 tracking-tight">Kütüphane</h1>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-accent-gold mt-1 calligraphy">ASR NESLİ</p>
                          </div>
                     </div>
 
@@ -68,7 +68,7 @@ const Categories = () => {
                          <input
                               type="text"
                               placeholder="Kategorilerde ara..." aria-label="Kategorilerde ara"
-                              className="block w-full p-5 pl-14 text-sm bg-surface-light/70 dark:bg-surface-dark/50 border border-white dark:border-white/10 rounded-[2rem] placeholder-primary/40 dark:placeholder-white/40 text-primary dark:text-white focus:ring-4 focus:ring-accent-gold/10 focus:outline-none backdrop-blur-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] transition-all duration-500"
+                              className="block w-full p-5 pl-14 text-sm bg-surface-light/70 dark:bg-surface-dark/50 border border-accent-gold/20 rounded-[2rem] placeholder-primary/40 dark:placeholder-accent-gold/40 text-primary dark:text-accent-gold focus:ring-4 focus:ring-accent-gold/10 focus:outline-none backdrop-blur-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] transition-all duration-500"
                          />
                     </div>
                </header>
@@ -87,26 +87,26 @@ const Categories = () => {
                                         ease: [0.22, 1, 0.36, 1]
                                    }}
                                    onClick={() => navigate(cat.path)}
-                                   className="group relative w-full h-32 overflow-hidden rounded-[2.5rem] bg-surface-light dark:bg-surface-dark shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 dark:border-white/5 cursor-pointer flex items-center px-8 transition-all hover:shadow-2xl hover:border-accent-gold/20 hover:-translate-y-1 text-left"
+                                   className="group relative w-full h-32 overflow-hidden rounded-[2.5rem] bg-surface-light dark:bg-surface-dark shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-accent-gold/20 cursor-pointer flex items-center px-8 transition-all hover:shadow-lg hover:shadow-accent-gold/10 hover:border-accent-gold/40 hover:-translate-y-1 text-left"
                               >
                                    {/* Card Decoration */}
                                    <div className="absolute right-0 top-0 h-full w-1/2 bg-gradient-to-l from-accent-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
 
-                                   <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-accent-green/5 dark:bg-white/5 text-accent-green dark:text-accent-gold group-hover:scale-110 group-hover:bg-accent-gold group-hover:text-white transition-all duration-500 shadow-sm shadow-accent-green/10 group-hover:shadow-accent-gold/30">
+                                   <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-accent-gold/10 text-accent-gold group-hover:scale-110 group-hover:bg-accent-gold group-hover:text-white transition-all duration-500 shadow-sm shadow-accent-gold/10 group-hover:shadow-accent-gold/30">
                                         <span className="material-symbols-outlined text-3xl font-light">
                                              {cat.icon}
                                         </span>
                                    </div>
 
                                    <div className="ml-6 flex-1">
-                                        <h3 className="text-xl font-bold text-primary dark:text-white mb-1 group-hover:text-accent-gold transition-colors duration-300">{cat.name}</h3>
+                                        <h3 className="text-xl font-bold text-primary dark:text-accent-gold mb-1 group-hover:text-accent-gold/80 transition-colors duration-300">{cat.name}</h3>
                                         <div className="flex items-center gap-2">
                                              <div className="h-px w-6 bg-accent-gold/30"></div>
-                                             <p className="text-[10px] text-text-secondary dark:text-gray-400 font-black uppercase tracking-widest">{cat.subtitle}</p>
+                                             <p className="text-[10px] text-text-secondary dark:text-gray-400 font-bold uppercase tracking-widest">{cat.subtitle}</p>
                                         </div>
                                    </div>
 
-                                   <div className="size-10 rounded-full bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-300 group-hover:text-accent-gold group-hover:rotate-45 transition-all duration-500">
+                                   <div className="size-10 rounded-full bg-surface-subtle dark:bg-white/5 flex items-center justify-center text-accent-gold/50 group-hover:text-accent-gold group-hover:rotate-45 transition-all duration-500">
                                         <span className="material-symbols-outlined text-lg">arrow_outward</span>
                                    </div>
                               </motion.button>

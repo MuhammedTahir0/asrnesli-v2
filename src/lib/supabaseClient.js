@@ -8,7 +8,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
      console.error('DIKKAT: Supabase URL veya Key eksik! Lütfen Vercel ayarlarını kontrol edin.');
 }
 
-console.log('🔌 Supabase Client Başlatılıyor...', { url: supabaseUrl ? 'Mevcut' : 'Eksik', key: supabaseAnonKey ? 'Mevcut' : 'Eksik' });
+
 
 let supabaseInstance;
 
@@ -16,7 +16,7 @@ try {
      // Singleton pattern for HMR (Hot Module Replacement)
      if (import.meta.env.DEV && window.__supabase) {
           supabaseInstance = window.__supabase;
-          console.log('♻️ Mevcut Supabase instance kullanılıyor (HMR)');
+          supabaseInstance = window.__supabase;
      } else {
           supabaseInstance = createClient(
                supabaseUrl || 'https://placeholder-url.supabase.co',
@@ -34,7 +34,9 @@ try {
           if (import.meta.env.DEV) {
                window.__supabase = supabaseInstance;
           }
-          console.log('✅ Supabase client başarıyla oluşturuldu');
+          if (import.meta.env.DEV) {
+               window.__supabase = supabaseInstance;
+          }
      }
 } catch (error) {
      console.error('❌ Supabase başlatma hatası:', error);

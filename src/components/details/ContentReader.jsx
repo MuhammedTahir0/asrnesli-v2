@@ -115,11 +115,11 @@ const ContentReader = () => {
                          animate={{ opacity: 1, y: 0 }}
                          transition={{ duration: 0.8 }}
                     >
-                         <p className="text-[10px] font-black uppercase tracking-[0.4em] text-accent-gold mb-3 opacity-90">{subtitle}</p>
-                         <h1 className="text-2xl md:text-4xl font-bold text-primary dark:text-white mb-2 leading-tight">{title}</h1>
+                         <p className="text-[10px] font-bold uppercase tracking-widest text-accent-gold mb-3 opacity-90">{subtitle}</p>
+                         <h1 className="text-2xl md:text-4xl font-bold text-primary dark:text-accent-gold mb-2 leading-tight">{title}</h1>
                          <div className="flex items-center justify-center gap-3">
                               <div className="h-px w-8 bg-accent-gold/30"></div>
-                              <span className="text-[10px] sm:text-xs text-text-secondary font-medium italic">{source}</span>
+                              <span className="text-[10px] sm:text-xs text-text-secondary font-bold italic uppercase tracking-widest">{source}</span>
                               <div className="h-px w-8 bg-accent-gold/30"></div>
                          </div>
                     </motion.div>
@@ -139,7 +139,7 @@ const ContentReader = () => {
                                    <span className="material-symbols-outlined text-3xl sm:text-4xl text-accent-gold">script</span>
                               </div>
                               <p
-                                   className="text-center text-accent-green dark:text-primary leading-[2.5] sm:leading-[3] calligraphy select-all transition-all"
+                                   className="text-center text-accent-green dark:text-accent-gold leading-[2.5] sm:leading-[3] calligraphy select-all transition-all"
                                    style={{ fontSize: Math.max(24, fontSize * 1.5) + 'px' }}
                               >
                                    {arabic}
@@ -156,7 +156,7 @@ const ContentReader = () => {
                     >
                          <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-accent-gold to-transparent opacity-20 hidden sm:block"></div>
                          <p
-                              className="text-text-primary dark:text-gray-100 leading-relaxed font-display text-justify transition-all"
+                              className="text-text-primary dark:text-accent-gold/90 leading-relaxed font-display text-justify transition-all"
                               style={{ fontSize: fontSize + 'px' }}
                          >
                               {content}
@@ -168,10 +168,10 @@ const ContentReader = () => {
                          <div className="flex gap-4">
                               <button
                                    onClick={handleShare}
-                                   className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-white dark:bg-white/10 border border-gray-200 dark:border-white/20 text-primary dark:text-white transition-all hover:bg-black/5 active:scale-95 shadow-sm"
+                                   className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-white dark:bg-white/10 border border-gray-200 dark:border-accent-gold/20 text-primary dark:text-accent-gold transition-all hover:bg-black/5 active:scale-95 shadow-sm"
                               >
                                    <span className="material-symbols-outlined text-xl">ios_share</span>
-                                   <span className="text-xs font-black uppercase tracking-[0.1em]">Stüdyoda Paylaş</span>
+                                   <span className="text-xs font-bold uppercase tracking-widest">Stüdyoda Paylaş</span>
                               </button>
                          </div>
                          <button

@@ -26,6 +26,7 @@ import ResetPassword from './pages/ResetPassword'
 import Profile from './pages/Profile'
 import Favorites from './pages/Favorites'
 import AdReward from './pages/AdReward'
+import Settings from './components/Settings'
 
 function App() {
      return (
@@ -90,6 +91,7 @@ function App() {
                                              <Route path="/profile" element={<Profile />} />
                                              <Route path="/favorites" element={<Favorites />} />
                                              <Route path="/ad-reward" element={<AdReward />} />
+                                             <Route path="/settings" element={<Settings />} />
                                         </Routes>
                                    </Layout>
                               </AuthGuard>

@@ -69,11 +69,11 @@ const Favorites = () => {
                     <div className="flex items-center gap-4 mb-6">
                          <button
                               onClick={() => navigate(-1)}
-                              className="size-10 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center text-primary"
+                              className="size-10 rounded-full bg-surface-light dark:bg-surface-dark border border-accent-gold/20 flex items-center justify-center text-primary dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                          >
                               <span className="material-symbols-outlined">arrow_back</span>
                          </button>
-                         <h1 className="text-2xl font-bold text-primary dark:text-white">Favorilerim</h1>
+                         <h1 className="text-2xl font-bold text-primary dark:text-accent-gold">Favorilerim</h1>
                     </div>
 
                     {/* Tabs */}
@@ -83,8 +83,8 @@ const Favorites = () => {
                                    key={tab.id}
                                    onClick={() => setActiveTab(tab.id)}
                                    className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl whitespace-nowrap transition-all text-xs font-bold uppercase tracking-wider border ${activeTab === tab.id
-                                             ? 'bg-accent-gold border-accent-gold text-white shadow-lg shadow-accent-gold/20'
-                                             : 'bg-white dark:bg-white/5 border-gray-100 dark:border-white/10 text-text-secondary'
+                                        ? 'bg-accent-gold border-accent-gold text-white shadow-lg shadow-accent-gold/20'
+                                        : 'bg-surface-light dark:bg-surface-dark border-accent-gold/10 text-text-secondary dark:text-accent-gold/60'
                                         }`}
                               >
                                    <span className="material-symbols-outlined text-lg">{tab.icon}</span>
@@ -117,24 +117,24 @@ const Favorites = () => {
                                                        source: fav.meta_data.source
                                                   }
                                              })}
-                                             className="p-5 rounded-3xl bg-white dark:bg-[#1a1c1a] border border-gray-100 dark:border-white/5 flex items-center justify-between group cursor-pointer hover:border-accent-gold/30 transition-all shadow-sm"
+                                             className="p-5 rounded-3xl bg-surface-light dark:bg-surface-dark border border-accent-gold/20 flex items-center justify-between group cursor-pointer hover:border-accent-gold/40 hover:shadow-lg hover:shadow-accent-gold/5 transition-all shadow-sm"
                                         >
                                              <div className="flex-1 pr-4">
                                                   <div className="flex items-center gap-3 mb-1">
-                                                       <span className="px-2 py-0.5 rounded-md bg-accent-gold/10 text-accent-gold text-[9px] font-black uppercase tracking-widest">
+                                                       <span className="px-2 py-0.5 rounded-md bg-accent-gold/10 text-accent-gold text-[9px] font-bold uppercase tracking-widest">
                                                             {fav.content_type}
                                                        </span>
-                                                       <h4 className="font-bold text-base text-primary dark:text-white line-clamp-1 group-hover:text-accent-gold transition-colors">
+                                                       <h4 className="font-bold text-base text-primary dark:text-accent-gold line-clamp-1 group-hover:text-accent-gold/80 transition-colors">
                                                             {fav.meta_data.title}
                                                        </h4>
                                                   </div>
-                                                  <p className="text-xs text-text-secondary dark:text-gray-400 line-clamp-1">
+                                                  <p className="text-xs text-text-secondary dark:text-accent-gold/50 line-clamp-1 font-medium">
                                                        {fav.meta_data.content}
                                                   </p>
                                              </div>
                                              <button
                                                   onClick={(e) => handleRemove(e, fav)}
-                                                  className="size-10 rounded-xl bg-red-500/5 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"
+                                                  className="size-10 rounded-xl bg-red-500/5 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all border border-red-500/10"
                                              >
                                                   <span className="material-symbols-outlined text-xl">delete</span>
                                              </button>
@@ -146,8 +146,8 @@ const Favorites = () => {
                                    <div className="size-20 rounded-full bg-accent-gold/5 flex items-center justify-center mb-6">
                                         <span className="material-symbols-outlined text-4xl text-accent-gold opacity-20">bookmark</span>
                                    </div>
-                                   <h3 className="text-lg font-bold text-primary dark:text-white mb-2">Henüz favori yok</h3>
-                                   <p className="text-sm text-text-secondary dark:text-gray-400 max-w-[240px]">
+                                   <h3 className="text-lg font-bold text-primary dark:text-accent-gold mb-2">Henüz favori yok</h3>
+                                   <p className="text-sm text-text-secondary dark:text-gray-400 max-w-[240px] font-medium">
                                         Beğendiğiniz içerikleri kaydederek burada görüntüleyebilirsiniz.
                                    </p>
                               </div>

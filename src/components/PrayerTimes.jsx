@@ -107,20 +107,21 @@ const PrayerTimes = () => {
      }
 
      return (
-          <div className="min-h-screen bg-background-dark flex flex-col relative pb-28">
-               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background-dark to-background-dark pointer-events-none"></div>
+          <div className="min-h-screen bg-background-light dark:bg-background-dark flex flex-col relative pb-28">
+               <div className="absolute inset-0 bg-islamic-pattern opacity-[0.05] pointer-events-none"></div>
+               <div className="absolute inset-0 bg-gradient-to-b from-accent-gold/5 via-transparent to-accent-green/5 pointer-events-none"></div>
 
                {/* Header */}
-               <header className="sticky top-0 z-50 bg-background-dark/90 backdrop-blur-xl border-b border-accent-gold/10">
-                    <div className="flex items-center justify-between p-4">
+               <header className="sticky top-0 z-50 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-xl border-b border-accent-gold/20">
+                    <div className="flex items-center justify-between p-4 px-6">
                          <button
                               onClick={() => navigate(-1)}
-                              className="p-2 rounded-full hover:bg-white/5 transition-colors"
+                              className="size-10 rounded-full bg-surface-light dark:bg-surface-dark border border-accent-gold/20 flex items-center justify-center text-primary dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                          >
-                              <span className="material-symbols-outlined text-white">arrow_back</span>
+                              <span className="material-symbols-outlined">arrow_back</span>
                          </button>
-                         <h1 className="text-lg font-bold text-white">Ezan Vakitleri</h1>
-                         <div className="w-10" /> {/* Spacer */}
+                         <h2 className="text-2xl font-bold text-primary dark:text-accent-gold mb-1">Cami Vakitleri</h2>
+                         <div className="w-10" />
                     </div>
                </header>
 
@@ -131,12 +132,12 @@ const PrayerTimes = () => {
                          animate={{ opacity: 1, y: 0 }}
                          className="flex flex-col items-center text-center space-y-2"
                     >
-                         <div className="inline-flex items-center gap-2 bg-accent-green/20 px-4 py-1.5 rounded-full border border-accent-green/30">
+                         <div className="inline-flex items-center gap-2 bg-accent-green/10 dark:bg-primary/20 px-4 py-1.5 rounded-full border border-accent-gold/20 shadow-sm">
                               <span className="material-symbols-outlined text-accent-gold text-sm">location_on</span>
-                              <span className="text-sm font-medium text-white tracking-wide">{locationName}</span>
+                              <span className="text-sm font-bold text-accent-green dark:text-primary tracking-wide uppercase">{locationName}</span>
                          </div>
                          {data?.hijri && (
-                              <p className="text-accent-gold/70 text-xs font-medium uppercase tracking-widest">
+                              <p className="text-accent-gold text-xs font-bold uppercase tracking-widest">
                                    {data.hijri.day} {data.hijri.month.en} {data.hijri.year}
                               </p>
                          )}
@@ -146,10 +147,10 @@ const PrayerTimes = () => {
                     <motion.div
                          initial={{ opacity: 0, scale: 0.95 }}
                          animate={{ opacity: 1, scale: 1 }}
-                         className="relative bg-gradient-to-br from-background-dark to-primary/20 rounded-3xl p-8 border border-accent-gold/20 shadow-2xl overflow-hidden"
+                         className="relative bg-surface-light dark:bg-surface-dark rounded-[2.5rem] p-8 border border-accent-gold/20 shadow-soft overflow-hidden"
                     >
-                         <div className="absolute top-0 right-0 p-8 opacity-5">
-                              <span className="material-symbols-outlined text-8xl text-accent-gold">mosque</span>
+                         <div className="absolute top-0 right-0 p-8 opacity-5 dark:opacity-10 text-accent-gold pointer-events-none">
+                              <span className="material-symbols-outlined text-9xl">mosque</span>
                          </div>
 
                          <div className="relative z-10 text-center space-y-4">
@@ -159,24 +160,24 @@ const PrayerTimes = () => {
 
                               <div className="flex items-center justify-center gap-4">
                                    <div className="flex flex-col">
-                                        <span className="text-5xl font-black text-white tabular-nums tracking-tighter">
+                                        <span className="text-5xl font-bold text-primary dark:text-accent-gold tabular-nums tracking-tighter">
                                              {String(timeLeft.h).padStart(2, '0')}
                                         </span>
-                                        <span className="text-[10px] font-bold text-gray-500 uppercase">Saat</span>
+                                        <span className="text-[10px] font-bold text-text-secondary dark:text-accent-gold/60 uppercase tracking-widest">Saat</span>
                                    </div>
                                    <span className="text-4xl font-light text-accent-gold/40 mb-4">:</span>
                                    <div className="flex flex-col">
-                                        <span className="text-5xl font-black text-white tabular-nums tracking-tighter">
+                                        <span className="text-5xl font-bold text-primary dark:text-accent-gold tabular-nums tracking-tighter">
                                              {String(timeLeft.m).padStart(2, '0')}
                                         </span>
-                                        <span className="text-[10px] font-bold text-gray-500 uppercase">Dakika</span>
+                                        <span className="text-[10px] font-bold text-text-secondary dark:text-accent-gold/60 uppercase tracking-widest">Dakika</span>
                                    </div>
                                    <span className="text-4xl font-light text-accent-gold/40 mb-4">:</span>
                                    <div className="flex flex-col">
-                                        <span className="text-5xl font-black text-white tabular-nums tracking-tighter">
+                                        <span className="text-5xl font-bold text-primary dark:text-accent-gold tabular-nums tracking-tighter">
                                              {String(timeLeft.s).padStart(2, '0')}
                                         </span>
-                                        <span className="text-[10px] font-bold text-gray-500 uppercase">Saniye</span>
+                                        <span className="text-[10px] font-bold text-text-secondary dark:text-accent-gold/60 uppercase tracking-widest">Saniye</span>
                                    </div>
                               </div>
                          </div>
@@ -187,34 +188,34 @@ const PrayerTimes = () => {
                          initial={{ opacity: 0, y: 20 }}
                          animate={{ opacity: 1, y: 0 }}
                          transition={{ delay: 0.1 }}
-                         className="bg-background-dark/80 rounded-3xl border border-accent-gold/10 overflow-hidden backdrop-blur-md"
+                         className="bg-surface-light dark:bg-surface-dark rounded-[2.5rem] border border-accent-gold/20 overflow-hidden shadow-soft"
                     >
-                         <div className="divide-y divide-accent-gold/5">
+                         <div className="divide-y divide-accent-gold/10">
                               {data?.timings && prayerList.map((p) => {
                                    const isNext = nextPrayer?.key === p.key
                                    return (
                                         <div
                                              key={p.key}
-                                             className={`flex items-center justify-between p-5 transition-colors ${isNext ? 'bg-accent-gold/5' : ''
+                                             className={`flex items-center justify-between p-5 transition-colors ${isNext ? 'bg-accent-gold/5' : 'hover:bg-black/5 dark:hover:bg-white/5'
                                                   }`}
                                         >
                                              <div className="flex items-center gap-4">
-                                                  <div className={`size-10 rounded-xl flex items-center justify-center ${isNext ? 'bg-accent-gold text-background-dark' : 'bg-white/5 text-white/50'
+                                                  <div className={`size-10 rounded-xl flex items-center justify-center transition-colors ${isNext ? 'bg-accent-gold text-white shadow-lg shadow-accent-gold/30' : 'bg-accent-gold/10 text-accent-gold'
                                                        }`}>
                                                        <span className="material-symbols-outlined text-xl">{p.icon}</span>
                                                   </div>
                                                   <div className="flex flex-col">
-                                                       <span className={`font-bold ${isNext ? 'text-white' : 'text-white/70'}`}>
+                                                       <span className={`font-bold tabular-nums text-lg ${isNext ? 'text-primary dark:text-accent-gold scale-110' : 'text-primary dark:text-accent-gold/80'}`}>
                                                             {p.label}
                                                        </span>
                                                        {isNext && (
-                                                            <span className="text-[10px] font-bold text-accent-gold uppercase tracking-wider">
+                                                            <span className="text-[9px] font-bold text-accent-gold uppercase tracking-widest">
                                                                  Sıradaki Vakit
                                                             </span>
                                                        )}
                                                   </div>
                                              </div>
-                                             <span className={`text-xl font-bold font-serif ${isNext ? 'text-accent-gold' : 'text-white/90'
+                                             <span className={`text-xl font-bold font-serif transition-colors ${isNext ? 'text-accent-gold' : 'text-primary dark:text-accent-gold/80'
                                                   }`}>
                                                   {data.timings[p.key]}
                                              </span>
@@ -228,21 +229,21 @@ const PrayerTimes = () => {
                     <div className="grid grid-cols-2 gap-4">
                          <button
                               onClick={() => navigate('/qibla')}
-                              className="group p-4 rounded-2xl bg-white/5 border border-accent-gold/10 flex flex-col items-center gap-2 hover:bg-accent-gold/5 transition-all"
+                              className="group p-5 rounded-[2rem] bg-surface-light dark:bg-surface-dark border border-accent-gold/20 flex flex-col items-center gap-3 hover:border-accent-gold/40 hover:shadow-lg hover:shadow-accent-gold/5 transition-all"
                          >
-                              <div className="size-10 rounded-full bg-white/5 flex items-center justify-center text-accent-gold group-hover:scale-110 transition-transform">
-                                   <span className="material-symbols-outlined">explore</span>
+                              <div className="size-12 rounded-2xl bg-accent-gold/10 flex items-center justify-center text-accent-gold group-hover:bg-accent-gold group-hover:text-white transition-all shadow-sm">
+                                   <span className="material-symbols-outlined text-2xl font-light">explore</span>
                               </div>
-                              <span className="text-xs font-bold text-white/70">Kıble Bulucu</span>
+                              <span className="text-xs font-bold text-primary dark:text-accent-gold uppercase tracking-widest">Kıble Bulucu</span>
                          </button>
                          <button
                               onClick={() => navigate('/categories/prayers')}
-                              className="group p-4 rounded-2xl bg-white/5 border border-accent-gold/10 flex flex-col items-center gap-2 hover:bg-accent-gold/5 transition-all"
+                              className="group p-5 rounded-[2rem] bg-surface-light dark:bg-surface-dark border border-accent-gold/20 flex flex-col items-center gap-3 hover:border-accent-gold/40 hover:shadow-lg hover:shadow-accent-gold/5 transition-all"
                          >
-                              <div className="size-10 rounded-full bg-white/5 flex items-center justify-center text-accent-gold group-hover:scale-110 transition-transform">
-                                   <span className="material-symbols-outlined">menu_book</span>
+                              <div className="size-12 rounded-2xl bg-accent-gold/10 flex items-center justify-center text-accent-gold group-hover:bg-accent-gold group-hover:text-white transition-all shadow-sm">
+                                   <span className="material-symbols-outlined text-2xl font-light">menu_book</span>
                               </div>
-                              <span className="text-xs font-bold text-white/70">Dualar</span>
+                              <span className="text-xs font-bold text-primary dark:text-accent-gold uppercase tracking-widest">Dualar</span>
                          </button>
                     </div>
                </main>
@@ -250,4 +251,3 @@ const PrayerTimes = () => {
      )
 }
 export default PrayerTimes
-

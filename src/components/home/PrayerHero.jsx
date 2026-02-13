@@ -111,35 +111,44 @@ const PrayerHero = () => {
 
      return (
           <motion.div
-               initial={{ opacity: 0, y: 20 }}
-               animate={{ opacity: 1, y: 0 }}
-               className="flex flex-col items-center justify-center py-4"
+               initial={{ opacity: 0, scale: 0.98 }}
+               animate={{ opacity: 1, scale: 1 }}
+               className="flex flex-col items-center justify-center pt-2 pb-6 w-full"
           >
-               <div className="flex items-center gap-2 mb-3 bg-accent-green/10 dark:bg-primary/20 px-4 py-1.5 rounded-full border border-accent-green/20">
-                    <span className="material-symbols-outlined text-[18px] text-accent-gold !leading-none">location_on</span>
-                    <span className="text-xs font-bold text-accent-green dark:text-primary uppercase tracking-widest leading-none pt-0.5">{location || 'Konum Belirleniyor...'}</span>
+               <div className="flex items-center gap-2 mb-6 bg-surface-light dark:bg-surface-dark px-5 py-2 rounded-full border border-accent-gold/20 shadow-soft">
+                    <span className="material-symbols-outlined text-[18px] text-accent-gold">location_on</span>
+                    <span className="text-[10px] font-bold text-primary dark:text-accent-gold uppercase tracking-widest">{location || 'Konum aranıyor...'}</span>
                </div>
 
-               <div className="flex flex-col items-center gap-1 mb-2">
-                    <span className="text-[11px] font-black uppercase tracking-[0.15em] text-text-secondary dark:text-gray-400">
-                         Sıradaki Vakit: <span className="text-accent-green dark:text-primary">{nextPrayer.name}</span>
-                    </span>
-                    <div className="text-6xl font-black font-display tracking-tighter text-text-primary dark:text-white">
+               <div className="flex flex-col items-center gap-3">
+                    <div className="flex items-center gap-4">
+                         <div className="h-px w-8 bg-gradient-to-r from-transparent to-accent-gold/30"></div>
+                         <span className="text-[10px] font-bold uppercase tracking-widest text-accent-gold bg-accent-gold/5 dark:bg-accent-gold/10 px-3 py-1 rounded-md">
+                              {nextPrayer.name} Vaktine
+                         </span>
+                         <div className="h-px w-8 bg-gradient-to-l from-transparent to-accent-gold/30"></div>
+                    </div>
+
+                    <div className="text-7xl font-bold tabular-nums tracking-tighter bg-gradient-to-b from-primary via-primary to-accent-green bg-clip-text text-transparent dark:from-accent-gold dark:via-accent-gold dark:to-accent-gold/50 py-1">
                          {timeLeft}
                     </div>
                </div>
 
                {isSoon ? (
                     <motion.div
-                         animate={{ scale: [1, 1.05, 1], opacity: [0.8, 1, 0.8] }}
+                         animate={{ opacity: [0.5, 1, 0.5] }}
                          transition={{ repeat: Infinity, duration: 2 }}
-                         className="flex items-center gap-2 text-[10px] font-bold text-red-500 uppercase tracking-widest bg-red-50 dark:bg-red-500/10 px-3 py-1 rounded-lg mt-2"
+                         className="flex items-center gap-2 text-[9px] font-bold text-red-500 uppercase tracking-widest bg-red-500/5 px-4 py-2 rounded-xl mt-4 border border-red-500/10 shadow-sm"
                     >
-                         <span className="material-symbols-outlined text-[14px]">alarm</span>
+                         <span className="material-symbols-outlined text-[14px]">notifications_active</span>
                          Vaktin girmesine az kaldı
                     </motion.div>
                ) : (
-                    <div className="h-1 w-12 bg-accent-green/20 rounded-full mt-4"></div>
+                    <div className="flex items-center gap-2 mt-4 opacity-20">
+                         <div className="size-1 rounded-full bg-accent-gold"></div>
+                         <div className="w-8 h-0.5 bg-accent-gold rounded-full"></div>
+                         <div className="size-1 rounded-full bg-accent-gold"></div>
+                    </div>
                )}
           </motion.div>
      )

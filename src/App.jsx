@@ -21,6 +21,7 @@ const EsmaDetail = lazy(() => import('./components/details/EsmaDetail'))
 const PrayerDetail = lazy(() => import('./components/details/PrayerDetail'))
 const HajjDetail = lazy(() => import('./components/details/HajjDetail'))
 const ContentReader = lazy(() => import('./components/details/ContentReader'))
+const QuranReader = lazy(() => import('./components/details/QuranReader'))
 const Settings = lazy(() => import('./components/Settings'))
 
 // Auth Pages (lazy)
@@ -115,8 +116,9 @@ function App() {
                                                        <Route path="/categories/fiqh" element={<FiqhDetail />} />
                                                        <Route path="/categories/esma" element={<EsmaDetail />} />
                                                        <Route path="/categories/prayers" element={<PrayerDetail />} />
-                                                       <Route path="/categories/hajj" element={<HajjDetail />} />
-                                                       <Route path="/categories/reader" element={<ContentReader />} />
+<Route path="/categories/hajj" element={<HajjDetail />} />
+                                                        <Route path="/categories/quran-reader" element={<QuranReader />} />
+                                                        <Route path="/categories/reader" element={<ContentReader />} />
                                                        <Route path="/profile" element={<Profile />} />
                                                        <Route path="/favorites" element={<Favorites />} />
                                                        <Route path="/ad-reward" element={<AdReward />} />

@@ -62,6 +62,8 @@ const ShareStudio = () => {
      const [fontFilter, setFontFilter] = useState('all')
      const [stickerFilter, setStickerFilter] = useState('all')
      const [addedStickers, setAddedStickers] = useState([])
+     const [textPos, setTextPos] = useState({ x: 0, y: 0 })
+     const [customRangeFontSize, setCustomRangeFontSize] = useState(24)
 
 
      const ADSENSE_CLIENT = 'ca-pub-8915311494926639'
@@ -705,23 +707,33 @@ const ShareStudio = () => {
                               )}
 
                               {/* Content */}
-                              <div className={`relative z-20 w-full flex flex-col items-center text-${textAlign}`}>
+                              <motion.div
+                                   drag
+                                   dragConstraints={cardRef}
+                                   dragElastic={0.1}
+                                   dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
+                                   whileDrag={{ scale: 1.02, cursor: 'grabbing' }}
+                                   onDragEnd={(e, info) => {
+                                        // Position can be persisted if needed, but simple drag is enough for interaction
+                                   }}
+                                   className={`relative z-20 w-full flex flex-col items-center text-${textAlign} cursor-move animate-in fade-in zoom-in duration-300`}
+                              >
                                    {content.arabic && (
                                         <p className="arabic-font text-3xl md:text-5xl leading-relaxed mb-6 text-center px-4 md:px-8 w-full"
-                                             style={{ textAlign }}
+                                             style={{ textAlign, fontSize: `${customRangeFontSize * 1.5}px` }}
                                         >
                                              {content.arabic}
                                         </p>
                                    )}
                                    <p className={`${currentTemplate.text} ${fontSize === 'auto' ? getDynamicFontSize(content.text.length) : (currentFontSize?.class || '')} px-8 w-full mx-auto`}
-                                        style={{ textAlign }}
+                                        style={{ textAlign, fontSize: `${customRangeFontSize}px` }}
                                    >
                                         {content.text}
                                    </p>
                                    <div className={currentTemplate.source}>
                                         {content.source}
                                    </div>
-                              </div>
+                              </motion.div>
 
                               {/* Stickers */}
                               {addedStickers.map(sticker => (
@@ -947,24 +959,55 @@ const ShareStudio = () => {
                                                   ))}
                                              </div>
                                         </div>
-                                        {/* Font Size */}
-                                        <div>
-                                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-2 block">Boyut</label>
-                                             <div className="grid grid-cols-3 gap-2">
-                                                  {fontSizes.map(size => (
-                                                       <button
-                                                            key={size.id}
-                                                            onClick={() => setFontSize(size.id)}
-                                                            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${fontSize === size.id
-                                                                 ? 'bg-accent-green text-white'
-                                                                 : 'bg-gray-100 dark:bg-white/10 dark:text-white'
-                                                                 }`}
-                                                       >
-                                                            {size.name}
-                                                       </button>
-                                                  ))}
+
+                                        {/* Font Size & Custom Slider */}
+                                        <div className="flex gap-4 items-end">
+                                             <div className="flex-1">
+                                                  <label className="text-[10px] font-bold uppercase text-gray-500 mb-2 block">Boyut Seviyesi</label>
+                                                  <div className="grid grid-cols-3 gap-2">
+                                                       {fontSizes.map(size => (
+                                                            <button
+                                                                 key={size.id}
+                                                                 onClick={() => {
+                                                                      setFontSize(size.id)
+                                                                      if (size.id === 'sm') setCustomRangeFontSize(20)
+                                                                      if (size.id === 'md') setCustomRangeFontSize(32)
+                                                                      if (size.id === 'lg') setCustomRangeFontSize(48)
+                                                                 }}
+                                                                 className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${fontSize === size.id
+                                                                      ? 'bg-accent-green text-white'
+                                                                      : 'bg-gray-100 dark:bg-white/10 dark:text-white'
+                                                                      }`}
+                                                            >
+                                                                 {size.name}
+                                                            </button>
+                                                       ))}
+                                                  </div>
+                                             </div>
+                                             <div className="flex flex-col items-center gap-2">
+                                                  <label className="text-[10px] font-bold uppercase text-gray-500 whitespace-nowrap">Hassas Ayar</label>
+                                                  <div className="h-32 w-10 flex items-center justify-center bg-gray-100 dark:bg-white/10 rounded-2xl relative group overflow-hidden">
+                                                       <div className="absolute w-1 h-24 bg-accent-green/10 rounded-full" />
+                                                       <input
+                                                            type="range"
+                                                            min="12"
+                                                            max="120"
+                                                            step="1"
+                                                            value={customRangeFontSize}
+                                                            onChange={(e) => {
+                                                                 setCustomRangeFontSize(parseInt(e.target.value))
+                                                                 setFontSize('custom')
+                                                            }}
+                                                            className="cursor-pointer appearance-none bg-transparent h-1 w-24 -rotate-90 origin-center accent-accent-green"
+                                                            style={{ WebkitAppearance: 'none', boxShadow: 'none' }}
+                                                       />
+                                                       <div className="absolute top-1 text-[8px] font-mono text-accent-green opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            {customRangeFontSize}
+                                                       </div>
+                                                  </div>
                                              </div>
                                         </div>
+
                                         {/* Alignment */}
                                         <div>
                                              <label className="text-[10px] font-bold uppercase text-gray-500 mb-2 block">Hizalama</label>
@@ -1268,7 +1311,7 @@ const ShareStudio = () => {
                          onSuccess={() => {
                               setShowAdPanel(false);
                               // handleAdSuccess logic might be elsewhere, but usually it grants tokens
-                              grantToken(5);
+                              grantToken(1);
                               toast.success('5 Token kazandınız!');
                          }}
                     />

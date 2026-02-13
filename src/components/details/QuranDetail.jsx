@@ -70,21 +70,32 @@ const QuranDetail = () => {
                          <button className="text-[10px] font-bold text-accent-gold uppercase tracking-widest hover:text-accent-green transition-colors">Tüm Liste</button>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-3">
-                         {surahCategories.popular.map((surah) => (
-                              <motion.div
-                                   key={surah.id}
-                                   whileHover={{ scale: 1.01 }}
-                                   onClick={() => navigate('/categories/reader', {
-                                        state: {
-                                             id: 'surah-' + surah.id,
-                                             title: surah.name + ' Suresi',
-                                             subtitle: 'Kur\'an-ı Kerim',
-                                             content: 'Rahman ve Rahim olan Allah\'ın adıyla. (Sure içeriği buraya gelecek...)',
-                                             arabic: 'بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
-                                             source: surah.verses + ' Ayet • ' + surah.type
-                                        }
-                                   })}
+                     <div className="grid grid-cols-1 gap-3">
+                          {surahCategories.popular.map((surah) => (
+                               <motion.div
+                                    key={surah.id}
+                                    whileHover={{ scale: 1.01 }}
+                                    onClick={() => {
+                                         if (surah.id === 36) {
+                                              navigate('/categories/quran-reader', {
+                                                   state: {
+                                                        surahNumber: surah.id,
+                                                        surahName: surah.name
+                                                   }
+                                              })
+                                         } else {
+                                              navigate('/categories/reader', {
+                                                   state: {
+                                                        id: 'surah-' + surah.id,
+                                                        title: surah.name + ' Suresi',
+                                                        subtitle: 'Kur\'an-ı Kerim',
+                                                        content: surah.id === 36 ? 'Yasin Suresi ayetleri yükleniyor...' : 'Rahman ve Rahim olan Allah\'ın adıyla. (Sure içeriği buraya gelecek...)',
+                                                        arabic: surah.id === 36 ? 'يسٓ' : 'بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
+                                                        source: surah.verses + ' Ayet • ' + surah.type
+                                                   }
+                                              })
+                                         }
+                                    }}
                                    className="group p-4 rounded-2xl bg-white dark:bg-[#1f291e] border border-gray-100 dark:border-white/5 flex items-center justify-between shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] hover:shadow-lg hover:border-accent-gold/20 transition-all cursor-pointer"
                               >
                                    <div className="flex items-center gap-4">

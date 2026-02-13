@@ -236,25 +236,43 @@ const ShareStudio = () => {
           return nextTokens
      }
 
-     const generateImage = async () => {
-          if (!cardRef.current) return null
+      const generateImage = async () => {
+           if (!cardRef.current) return null
 
-          // Font'un yüklenmesini bekle
-          if (currentFont && currentFont.family !== 'inherit') {
-               try {
-                    await document.fonts.ready
-                    await document.fonts.load(`16px "${currentFont.family}"`)
-               } catch (err) {
-                    console.warn('Font yükleme hatası:', err)
-               }
-          }
+           // Font'un yüklenmesini bekle
+           if (currentFont && currentFont.family !== 'inherit') {
+                try {
+                     await document.fonts.ready
+                     await document.fonts.load(`16px "${currentFont.family}"`)
+                } catch (err) {
+                     console.warn('Font yükleme hatası:', err)
+                }
+           }
 
-          return await toPng(cardRef.current, {
-               pixelRatio: 2,
-               cacheBust: true,
-               fontEmbedCSS: currentFont?.family ? `@import url('${getGoogleFontsUrl([currentFont])}');` : ''
-          })
-     }
+           // Orijinal stilleri kaydet
+           const originalMaxHeight = cardRef.current.style.maxHeight
+           const originalWidth = cardRef.current.style.width
+
+           // Gerçek platform boyutuna ayarla
+           cardRef.current.style.maxHeight = 'none'
+           cardRef.current.style.width = currentSize.width + 'px'
+           cardRef.current.style.maxWidth = '100%'
+
+           // Kısa bekleme
+           await new Promise(resolve => setTimeout(resolve, 100))
+
+           const dataUrl = await toPng(cardRef.current, {
+                pixelRatio: 2,
+                cacheBust: true,
+                fontEmbedCSS: currentFont?.family ? `@import url('${getGoogleFontsUrl([currentFont])}');` : ''
+           })
+
+           // Orijinal stilleri geri yükle
+           cardRef.current.style.maxHeight = originalMaxHeight
+           cardRef.current.style.width = originalWidth
+
+           return dataUrl
+      }
 
      const downloadImage = (dataUrl) => {
           const link = document.createElement('a')
@@ -263,42 +281,66 @@ const ShareStudio = () => {
           link.click()
      }
 
-     const shareImage = async () => {
-          if (!cardRef.current) return false
-          try {
-               // Font'un yüklenmesini bekle
-               if (currentFont && currentFont.family !== 'inherit') {
-                    try {
-                         await document.fonts.ready
-                         await document.fonts.load(`16px "${currentFont.family}"`)
-                    } catch (err) {
-                         console.warn('Font yükleme hatası:', err)
-                    }
-               }
+      const shareImage = async () => {
+           if (!cardRef.current) return false
+           try {
+                // Font'un yüklenmesini bekle
+                if (currentFont && currentFont.family !== 'inherit') {
+                     try {
+                          await document.fonts.ready
+                          await document.fonts.load(`16px "${currentFont.family}"`)
+                     } catch (err) {
+                          console.warn('Font yükleme hatası:', err)
+                     }
+                }
 
-               const blob = await toBlob(cardRef.current, {
-                    pixelRatio: 2,
-                    cacheBust: true,
-                    fontEmbedCSS: currentFont?.family ? `@import url('${getGoogleFontsUrl([currentFont])}');` : ''
-               })
-               const file = new File([blob], 'share.png', { type: 'image/png' })
-               if (navigator.share && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                         files: [file],
-                         title: 'Asr Nesli Paylaşım',
-                         text: content.text
-                    })
-                    return true
-               }
-               // Fallback to download
-               const dataUrl = await toPng(cardRef.current, {
-                    pixelRatio: 2,
-                    fontEmbedCSS: currentFont?.family ? `@import url('${getGoogleFontsUrl([currentFont])}');` : ''
-               })
-               downloadImage(dataUrl)
-               return true
-          } catch (err) {
-               console.error('Share error:', err)
+                // Orijinal stilleri kaydet
+                const originalMaxHeight = cardRef.current.style.maxHeight
+                const originalWidth = cardRef.current.style.width
+
+                // Gerçek platform boyutuna ayarla
+                cardRef.current.style.maxHeight = 'none'
+                cardRef.current.style.width = currentSize.width + 'px'
+                cardRef.current.style.maxWidth = '100%'
+
+                await new Promise(resolve => setTimeout(resolve, 100))
+
+                const blob = await toBlob(cardRef.current, {
+                     pixelRatio: 2,
+                     cacheBust: true,
+                     fontEmbedCSS: currentFont?.family ? `@import url('${getGoogleFontsUrl([currentFont])}');` : ''
+                })
+
+                // Orijinal stilleri geri yükle
+                cardRef.current.style.maxHeight = originalMaxHeight
+                cardRef.current.style.width = originalWidth
+
+                const file = new File([blob], 'share.png', { type: 'image/png' })
+                if (navigator.share && navigator.canShare({ files: [file] })) {
+                     await navigator.share({
+                          files: [file],
+                          title: 'Asr Nesli Paylaşım',
+                          text: content.text
+                     })
+                     return true
+                }
+                // Fallback to download - tekrar boyut ayarla
+                cardRef.current.style.maxHeight = 'none'
+                cardRef.current.style.width = currentSize.width + 'px'
+                cardRef.current.style.maxWidth = '100%'
+
+                const dataUrl = await toPng(cardRef.current, {
+                     pixelRatio: 2,
+                     fontEmbedCSS: currentFont?.family ? `@import url('${getGoogleFontsUrl([currentFont])}');` : ''
+                })
+
+                cardRef.current.style.maxHeight = originalMaxHeight
+                cardRef.current.style.width = originalWidth
+
+                downloadImage(dataUrl)
+                return true
+           } catch (err) {
+                console.error('Share error:', err)
                return false
           }
      }
@@ -320,39 +362,46 @@ const ShareStudio = () => {
           }
      }
 
-     const handleSharePlatform = async (platform) => {
-          if (isProcessing) return
-          if (!ensureTokenAccess()) return
-          setIsProcessing(true)
+      const handleSharePlatform = async (platform) => {
+           if (isProcessing) return
+           if (!ensureTokenAccess()) return
+           setIsProcessing(true)
 
-          try {
-               // Generate image blob
-               if (!cardRef.current) return
+           try {
+                // Generate image blob
+                if (!cardRef.current) return
 
-               const OriginalTransform = cardRef.current.style.transform
-               const OriginalBorderRadius = cardRef.current.style.borderRadius
-               const OriginalBoxShadow = cardRef.current.style.boxShadow
+                const OriginalTransform = cardRef.current.style.transform
+                const OriginalBorderRadius = cardRef.current.style.borderRadius
+                const OriginalBoxShadow = cardRef.current.style.boxShadow
+                const OriginalMaxHeight = cardRef.current.style.maxHeight
+                const OriginalWidth = cardRef.current.style.width
 
-               cardRef.current.style.transform = 'none'
-               cardRef.current.style.borderRadius = '0'
-               cardRef.current.style.boxShadow = 'none'
+                cardRef.current.style.transform = 'none'
+                cardRef.current.style.borderRadius = '0'
+                cardRef.current.style.boxShadow = 'none'
+                cardRef.current.style.maxHeight = 'none'
+                cardRef.current.style.width = currentSize.width + 'px'
+                cardRef.current.style.maxWidth = '100%'
 
-               // Wait for render
-               await new Promise(resolve => setTimeout(resolve, 500))
+                // Wait for render
+                await new Promise(resolve => setTimeout(resolve, 500))
 
-               const blob = await toBlob(cardRef.current, {
-                    cacheBust: true,
-                    pixelRatio: 2,
-                    quality: 1,
-                    fontEmbedCSS: currentFont?.family ? `@import url('${getGoogleFontsUrl([currentFont])}');` : ''
-               })
+                const blob = await toBlob(cardRef.current, {
+                     cacheBust: true,
+                     pixelRatio: 2,
+                     quality: 1,
+                     fontEmbedCSS: currentFont?.family ? `@import url('${getGoogleFontsUrl([currentFont])}');` : ''
+                })
 
-               // Restore styles
-               cardRef.current.style.transform = OriginalTransform
-               cardRef.current.style.borderRadius = OriginalBorderRadius
-               cardRef.current.style.boxShadow = OriginalBoxShadow
+                // Restore styles
+                cardRef.current.style.transform = OriginalTransform
+                cardRef.current.style.borderRadius = OriginalBorderRadius
+                cardRef.current.style.boxShadow = OriginalBoxShadow
+                cardRef.current.style.maxHeight = OriginalMaxHeight
+                cardRef.current.style.width = OriginalWidth
 
-               if (!blob) throw new Error('Blob oluşturulamadı')
+                if (!blob) throw new Error('Blob oluşturulamadı')
 
                const file = new File([blob], `asr-nesli-paylasim-${Date.now()}.png`, { type: 'image/png' })
                const shareData = {

@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
 
-const AdReward = () => {
+const AdReward = ({ onClose, onSuccess }) => {
      const navigate = useNavigate();
      const { profile, setProfile } = useAuth();
      const [countdown, setCountdown] = useState(5);
@@ -27,11 +27,26 @@ const AdReward = () => {
           return () => clearTimeout(timer);
      }, [countdown]);
 
+     const handleExit = () => {
+          if (onClose) {
+               onClose();
+          } else {
+               navigate(-1);
+          }
+     };
+
      const handleReward = async () => {
           if (isProcessing) return;
           setIsProcessing(true);
 
           try {
+               // If external handler provided, use it
+               if (onSuccess) {
+                    await onSuccess();
+                    handleExit();
+                    return;
+               }
+
                const { data, error } = await grantToken(1);
                if (error) throw error;
 
@@ -51,8 +66,8 @@ const AdReward = () => {
                     },
                });
 
-               // Return to previous page
-               navigate(-1);
+               // Return to previous page or close modal
+               handleExit();
           } catch (err) {
                console.error('Reward error:', err);
                toast.error('Token eklenirken bir hata oluştu.');
@@ -145,7 +160,7 @@ const AdReward = () => {
                          <button
                               onClick={() => {
                                    trackAdEvent('skip');
-                                   navigate(-1);
+                                   handleExit();
                               }}
                               className="text-white/20 hover:text-white/40 text-[10px] font-bold uppercase tracking-widest transition-colors"
                               disabled={isProcessing}

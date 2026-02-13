@@ -524,7 +524,7 @@ const ShareStudio = () => {
      ]
 
      return (
-          <div className="flex flex-col h-screen bg-background-light dark:bg-background-dark font-display overflow-hidden">
+          <div className="flex flex-col h-full min-h-0 bg-background-light dark:bg-background-dark font-display overflow-hidden">
                {/* Header */}
                <header className="shrink-0 flex items-center justify-between p-3 border-b border-black/5 dark:border-accent-gold/10 z-20 bg-surface-light/90 dark:bg-background-dark/90 backdrop-blur-md">
                     <button
@@ -1272,16 +1272,18 @@ const ShareStudio = () => {
                />
 
                {/* Ad Reward Modal */}
-               <AdReward
-                    isOpen={showAdPanel}
-                    onClose={() => setShowAdPanel(false)}
-                    onSuccess={() => {
-                         setShowAdPanel(false);
-                         // handleAdSuccess logic might be elsewhere, but usually it grants tokens
-                         grantToken(5);
-                         toast.success('5 Token kazandınız!');
-                    }}
-               />
+               {showAdPanel && (
+                    <AdReward
+                         isOpen={showAdPanel}
+                         onClose={() => setShowAdPanel(false)}
+                         onSuccess={() => {
+                              setShowAdPanel(false);
+                              // handleAdSuccess logic might be elsewhere, but usually it grants tokens
+                              grantToken(5);
+                              toast.success('5 Token kazandınız!');
+                         }}
+                    />
+               )}
           </div>
      )
 }

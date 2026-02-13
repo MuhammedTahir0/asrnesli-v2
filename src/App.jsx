@@ -32,6 +32,8 @@ const Profile = lazy(() => import('./pages/Profile'))
 const Favorites = lazy(() => import('./pages/Favorites'))
 const AdReward = lazy(() => import('./pages/AdReward'))
 
+import { SpeedInsights } from "@vercel/speed-insights/react"
+
 // Loading fallback
 const PageLoader = () => (
      <div style={{
@@ -55,6 +57,7 @@ const PageLoader = () => (
 function App() {
      return (
           <AuthProvider>
+               <SpeedInsights />
                <Router>
                     <Toaster
                          position="top-center"

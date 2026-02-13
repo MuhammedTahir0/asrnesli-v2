@@ -70,13 +70,35 @@ export default defineConfig({
     })
   ],
   build: {
-    chunkSizeWarningLimit: 1600,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            return 'vendor';
-          }
+        manualChunks: {
+          'vendor-react': [
+            'react',
+            'react-dom',
+            'react-router-dom'
+          ],
+          'vendor-charts': [
+            'recharts'
+          ],
+          'vendor-supabase': [
+            '@supabase/supabase-js'
+          ],
+          'vendor-motion': [
+            'framer-motion'
+          ],
+          'vendor-ui': [
+            'react-hot-toast',
+            'react-icons',
+            'lucide-react',
+            'clsx',
+            'tailwind-merge'
+          ],
+          'vendor-image': [
+            'html2canvas',
+            'html-to-image'
+          ]
         }
       }
     }

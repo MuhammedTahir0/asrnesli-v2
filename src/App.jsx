@@ -1,32 +1,56 @@
-import React from 'react'
+import React, { Suspense, lazy } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './contexts/AuthContext'
 import AuthGuard from './components/auth/AuthGuard'
 import Layout from './components/layout/Layout'
-import Home from './components/Home'
-import Categories from './components/Categories'
-import ShareStudio from './components/ShareStudio'
-import AdminPanel from './components/AdminPanel'
-import PrayerTimes from './components/PrayerTimes'
-import QiblaFinder from './components/QiblaFinder'
-import QuranDetail from './components/details/QuranDetail'
-import HadithDetail from './components/details/HadithDetail'
-import FiqhDetail from './components/details/FiqhDetail'
-import EsmaDetail from './components/details/EsmaDetail'
-import PrayerDetail from './components/details/PrayerDetail'
-import HajjDetail from './components/details/HajjDetail'
-import ContentReader from './components/details/ContentReader'
 
-// Auth Pages
-import Login from './pages/Login'
-import Register from './pages/Register'
-import ForgotPassword from './pages/ForgotPassword'
-import ResetPassword from './pages/ResetPassword'
-import Profile from './pages/Profile'
-import Favorites from './pages/Favorites'
-import AdReward from './pages/AdReward'
-import Settings from './components/Settings'
+// Eagerly loaded (ana sayfa hızlı açılsın)
+import Home from './components/Home'
+
+// Lazy loaded pages
+const Categories = lazy(() => import('./components/Categories'))
+const ShareStudio = lazy(() => import('./components/ShareStudio'))
+const AdminPanel = lazy(() => import('./components/AdminPanel'))
+const PrayerTimes = lazy(() => import('./components/PrayerTimes'))
+const QiblaFinder = lazy(() => import('./components/QiblaFinder'))
+const QuranDetail = lazy(() => import('./components/details/QuranDetail'))
+const HadithDetail = lazy(() => import('./components/details/HadithDetail'))
+const FiqhDetail = lazy(() => import('./components/details/FiqhDetail'))
+const EsmaDetail = lazy(() => import('./components/details/EsmaDetail'))
+const PrayerDetail = lazy(() => import('./components/details/PrayerDetail'))
+const HajjDetail = lazy(() => import('./components/details/HajjDetail'))
+const ContentReader = lazy(() => import('./components/details/ContentReader'))
+const Settings = lazy(() => import('./components/Settings'))
+
+// Auth Pages (lazy)
+const Login = lazy(() => import('./pages/Login'))
+const Register = lazy(() => import('./pages/Register'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword'))
+const Profile = lazy(() => import('./pages/Profile'))
+const Favorites = lazy(() => import('./pages/Favorites'))
+const AdReward = lazy(() => import('./pages/AdReward'))
+
+// Loading fallback
+const PageLoader = () => (
+     <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '60vh',
+          color: 'var(--color-gold, #c5a059)'
+     }}>
+          <div style={{
+               width: 36,
+               height: 36,
+               border: '3px solid rgba(197, 160, 89, 0.2)',
+               borderTop: '3px solid var(--color-gold, #c5a059)',
+               borderRadius: '50%',
+               animation: 'spin 0.8s linear infinite'
+          }} />
+     </div>
+)
 
 function App() {
      return (
@@ -47,56 +71,60 @@ function App() {
                               },
                          }}
                     />
-                    <Routes>
-                         {/* Auth Sayfaları - Layout olmadan, giriş yapmamış kullanıcılar için */}
-                         <Route path="/login" element={
-                              <AuthGuard requireAuth={false}>
-                                   <Login />
-                              </AuthGuard>
-                         } />
-                         <Route path="/register" element={
-                              <AuthGuard requireAuth={false}>
-                                   <Register />
-                              </AuthGuard>
-                         } />
-                         <Route path="/forgot-password" element={
-                              <AuthGuard requireAuth={false}>
-                                   <ForgotPassword />
-                              </AuthGuard>
-                         } />
-                         <Route path="/reset-password" element={
-                              <AuthGuard requireAuth={false}>
-                                   <ResetPassword />
-                              </AuthGuard>
-                         } />
+                    <Suspense fallback={<PageLoader />}>
+                         <Routes>
+                              {/* Auth Sayfaları - Layout olmadan, giriş yapmamış kullanıcılar için */}
+                              <Route path="/login" element={
+                                   <AuthGuard requireAuth={false}>
+                                        <Login />
+                                   </AuthGuard>
+                              } />
+                              <Route path="/register" element={
+                                   <AuthGuard requireAuth={false}>
+                                        <Register />
+                                   </AuthGuard>
+                              } />
+                              <Route path="/forgot-password" element={
+                                   <AuthGuard requireAuth={false}>
+                                        <ForgotPassword />
+                                   </AuthGuard>
+                              } />
+                              <Route path="/reset-password" element={
+                                   <AuthGuard requireAuth={false}>
+                                        <ResetPassword />
+                                   </AuthGuard>
+                              } />
 
-                         {/* Korumalı Sayfalar - Auth gerekli */}
-                         <Route path="/*" element={
-                              <AuthGuard requireAuth={true}>
-                                   <Layout>
-                                        <Routes>
-                                             <Route path="/" element={<Home />} />
-                                             <Route path="/categories" element={<Categories />} />
-                                             <Route path="/share" element={<ShareStudio />} />
-                                             <Route path="/admin" element={<AdminPanel />} />
-                                             <Route path="/prayer" element={<PrayerTimes />} />
-                                             <Route path="/qibla" element={<QiblaFinder />} />
-                                             <Route path="/categories/quran" element={<QuranDetail />} />
-                                             <Route path="/categories/hadith" element={<HadithDetail />} />
-                                             <Route path="/categories/fiqh" element={<FiqhDetail />} />
-                                             <Route path="/categories/esma" element={<EsmaDetail />} />
-                                             <Route path="/categories/prayers" element={<PrayerDetail />} />
-                                             <Route path="/categories/hajj" element={<HajjDetail />} />
-                                             <Route path="/categories/reader" element={<ContentReader />} />
-                                             <Route path="/profile" element={<Profile />} />
-                                             <Route path="/favorites" element={<Favorites />} />
-                                             <Route path="/ad-reward" element={<AdReward />} />
-                                             <Route path="/settings" element={<Settings />} />
-                                        </Routes>
-                                   </Layout>
-                              </AuthGuard>
-                         } />
-                    </Routes>
+                              {/* Korumalı Sayfalar - Auth gerekli */}
+                              <Route path="/*" element={
+                                   <AuthGuard requireAuth={true}>
+                                        <Layout>
+                                             <Suspense fallback={<PageLoader />}>
+                                                  <Routes>
+                                                       <Route path="/" element={<Home />} />
+                                                       <Route path="/categories" element={<Categories />} />
+                                                       <Route path="/share" element={<ShareStudio />} />
+                                                       <Route path="/admin" element={<AdminPanel />} />
+                                                       <Route path="/prayer" element={<PrayerTimes />} />
+                                                       <Route path="/qibla" element={<QiblaFinder />} />
+                                                       <Route path="/categories/quran" element={<QuranDetail />} />
+                                                       <Route path="/categories/hadith" element={<HadithDetail />} />
+                                                       <Route path="/categories/fiqh" element={<FiqhDetail />} />
+                                                       <Route path="/categories/esma" element={<EsmaDetail />} />
+                                                       <Route path="/categories/prayers" element={<PrayerDetail />} />
+                                                       <Route path="/categories/hajj" element={<HajjDetail />} />
+                                                       <Route path="/categories/reader" element={<ContentReader />} />
+                                                       <Route path="/profile" element={<Profile />} />
+                                                       <Route path="/favorites" element={<Favorites />} />
+                                                       <Route path="/ad-reward" element={<AdReward />} />
+                                                       <Route path="/settings" element={<Settings />} />
+                                                  </Routes>
+                                             </Suspense>
+                                        </Layout>
+                                   </AuthGuard>
+                              } />
+                         </Routes>
+                    </Suspense>
                </Router>
           </AuthProvider>
      )
